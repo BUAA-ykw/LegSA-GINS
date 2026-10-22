@@ -1,0 +1,4 @@
+* text=auto eol=lf
+evaluation/evaluate.py -text -whitespace
+LICENSE -text -whitespace
+LICENSES/* -text -whitespace

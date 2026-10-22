@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "legsa-gins"
+version = "1.0.0"
+description = "Motion-constrained short-baseline GNSS/INS integration for compact legged robots"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+dependencies = [
+  "numpy==1.26.4",
+  "scipy==1.11.4",
+  "pandas==2.2.3",
+  "PyYAML==6.0.3",
+  "matplotlib==3.8.4",
+]
+
+[project.optional-dependencies]
+comparisons = ["gtsam==4.2", "pyceres==2.6"]
+
+[project.urls]
+Repository = "https://github.com/BUAA-ykw/LegSA-GINS"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["preprocessing*", "experiments*", "evaluation*", "baselines*", "plotting*"]
+namespaces = false

@@ -1,0 +1,154 @@
+// LegSA-GINS. Inertial backbone derived from KF-GINS; see THIRD_PARTY_NOTICES.md.
+#pragma once
+
+#include "legsa_gins/types.hpp"
+
+#include <array>
+#include <cstddef>
+#include <string>
+#include <vector>
+
+namespace legsa_gins::source_aware {
+
+enum class MeasurementSource : std::size_t {
+  kReceiverPosition = 0,
+  kReceiverVelocity = 1,
+  kDualAntennaYaw = 2,
+  kRawDopplerVelocity = 3,
+  kGo2AttitudeRollPitch = 4,
+  kGo2HorizontalVelocity = 5,
+};
+
+constexpr std::size_t kMeasurementSourceCount = 6;
+
+const char* toString(MeasurementSource source);
+MeasurementSource measurementSourceFromString(const std::string& value);
+std::size_t sourceIndex(MeasurementSource source);
+
+struct SourceMetadata {
+  MeasurementSource source = MeasurementSource::kReceiverPosition;
+  double time = 0.0;
+  bool valid = true;
+  Vec3 std_xyz = makeVec3(1.0, 1.0, 1.0);
+  double yaw_std_rad = D2R;
+  double residual_norm = 0.0;
+  double time_diff_sec = 0.0;
+  std::size_t sat_count = 0;
+  std::string provider_status = "available";
+  std::string quality_flag = "nominal";
+  bool covariance_available = true;
+  bool rel_valid = true;
+  bool ant_valid = true;
+  std::string ant_state = "available";
+  double baseline_length_m = 0.0;
+  double rel_acc_m = 0.0;
+  bool spike_candidate = false;
+  bool go2_readiness_metadata_available = false;
+  std::string go2_motion_state = "UNKNOWN";
+  std::string go2_contact_label;
+  double go2_readiness_score = 1.0;
+  bool go2_readiness_flag = true;
+  bool go2_stance_stable = false;
+  bool go2_in_place_turn = false;
+  bool go2_impact_or_rough = false;
+  bool go2_readiness_low = false;
+};
+
+struct ObservationInnovation {
+  std::vector<double> residual;
+  double residual_norm = 0.0;
+  double base_R_trace = 0.0;
+  double hph_trace = 0.0;
+  double innovation_cov_trace = 0.0;
+  double nis = 0.0;
+  std::size_t dof = 0;
+  double normalized_innovation = 0.0;
+  bool used_innovation_covariance = false;
+};
+
+struct SourceWeightResult {
+  MeasurementSource source = MeasurementSource::kReceiverPosition;
+  std::string policy_version = "n6b_conservative_innovation_covariance";
+  std::string mode = "off";
+  double lsim_score = 1.0;
+  double oim_score = 1.0;
+  double lsim_R_scale = 1.0;
+  double oim_R_scale = 1.0;
+  double combined_R_scale = 1.0;
+  double residual_norm = 0.0;
+  double normalized_innovation = 0.0;
+  double nis = 0.0;
+  std::size_t dof = 0;
+  double innovation_cov_trace = 0.0;
+  bool used_innovation_covariance = false;
+  double source_cap = 25.0;
+  double rolling_normalized_median = 0.0;
+  double rolling_normalized_mad = 0.0;
+  double relative_anomaly_score = 0.0;
+  double base_R_trace = 0.0;
+  double scaled_R_trace = 0.0;
+  bool accepted = true;
+  bool rejected = false;
+  bool go2_readiness_metadata_available = false;
+  std::string go2_motion_state = "UNKNOWN";
+  std::string go2_contact_label;
+  double go2_readiness_score = 1.0;
+  bool go2_readiness_flag = true;
+  std::vector<std::string> reason_codes;
+  std::string metadata_summary;
+};
+
+struct SourceAwareSourceConfig {
+  bool enabled = true;
+  bool lsim_enabled = true;
+  bool oim_enabled = true;
+};
+
+struct SourceAwarePolicyConfig {
+  bool enable_source_aware_weighting = false;
+  std::string source_aware_policy_version = "n6b_conservative_innovation_covariance";
+  std::string source_aware_mode = "off";
+  double source_aware_max_R_scale = 25.0;
+  double source_aware_global_cap = 25.0;
+  bool source_aware_use_innovation_covariance = true;
+  double source_aware_deadband_normalized = 1.5;
+  double source_aware_moderate_normalized = 2.5;
+  double source_aware_strong_normalized = 4.0;
+  double source_aware_receiver_position_cap = 5.0;
+  double source_aware_receiver_velocity_cap = 8.0;
+  double source_aware_dual_yaw_cap = 10.0;
+  double source_aware_raw_doppler_cap = 15.0;
+  double source_aware_go2_attitude_cap = 10.0;
+  double source_aware_go2_horizontal_velocity_cap = 10.0;
+  bool source_aware_go2_readiness_lsim_enabled = false;
+  double source_aware_go2_readiness_low_scale = 2.0;
+  double source_aware_go2_impact_or_rough_scale = 2.0;
+  double source_aware_go2_motion_unknown_scale = 1.25;
+  double source_aware_go2_in_place_turn_scale = 1.15;
+  bool source_aware_reject_extreme = false;
+  bool source_aware_no_R_shrink = true;
+  bool source_aware_trace_enabled = true;
+  bool source_aware_enable_rolling_innovation_baseline = true;
+  std::size_t source_aware_rolling_window_size = 31;
+  double source_aware_rolling_mad_floor = 0.5;
+  std::string source_aware_method_family = "n6b_conservative_quadratic";
+  double source_aware_method_k0 = 1.5;
+  double source_aware_method_k1 = 4.0;
+  double source_aware_method_c = 2.5;
+  double source_aware_method_alpha = 0.0;
+  double source_aware_method_phi = 1.0;
+  double source_aware_method_base_gain = 1.0;
+  std::array<SourceAwareSourceConfig, kMeasurementSourceCount> sources{};
+};
+
+struct SourceAwareRuntimeStats {
+  std::size_t trace_row_count = 0;
+  std::array<std::size_t, kMeasurementSourceCount> update_count_by_source{};
+  std::array<std::size_t, kMeasurementSourceCount> reject_count_by_source{};
+  std::array<double, kMeasurementSourceCount> scale_p50_by_source{};
+  std::array<double, kMeasurementSourceCount> scale_p95_by_source{};
+  std::array<double, kMeasurementSourceCount> scale_max_by_source{};
+  bool spike_response_evaluated = false;
+};
+
+}

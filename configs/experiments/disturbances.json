@@ -1,0 +1,956 @@
+[
+  {
+    "type_id": "D01",
+    "name": "GNSS_position_outage_3s",
+    "family": "gnss_outage",
+    "parameters": {
+      "operation": "outage",
+      "sources": [
+        "gnss_position"
+      ],
+      "duration_s": 3
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D02",
+    "name": "GNSS_position_outage_5s",
+    "family": "gnss_outage",
+    "parameters": {
+      "operation": "outage",
+      "sources": [
+        "gnss_position"
+      ],
+      "duration_s": 5
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D03",
+    "name": "GNSS_position_outage_10s",
+    "family": "gnss_outage",
+    "parameters": {
+      "operation": "outage",
+      "sources": [
+        "gnss_position"
+      ],
+      "duration_s": 10
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D04",
+    "name": "GNSS_position_outage_20s",
+    "family": "gnss_outage",
+    "parameters": {
+      "operation": "outage",
+      "sources": [
+        "gnss_position"
+      ],
+      "duration_s": 20
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D05",
+    "name": "GNSS_position_velocity_outage_10s",
+    "family": "gnss_outage",
+    "parameters": {
+      "operation": "outage",
+      "sources": [
+        "gnss_position",
+        "receiver_velocity"
+      ],
+      "duration_s": 10
+    },
+    "affected_sources": [
+      "gnss_position",
+      "receiver_velocity"
+    ]
+  },
+  {
+    "type_id": "D06",
+    "name": "GNSS_all_update_outage_20s",
+    "family": "gnss_outage",
+    "parameters": {
+      "operation": "outage",
+      "sources": [
+        "gnss_position",
+        "receiver_velocity",
+        "dual_yaw"
+      ],
+      "duration_s": 20
+    },
+    "affected_sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D07",
+    "name": "GNSS_repeated_short_outage",
+    "family": "gnss_outage",
+    "parameters": {
+      "operation": "repeated_outage",
+      "sources": [
+        "gnss_position"
+      ],
+      "interval_count": 3,
+      "duration_each_s": 3.0,
+      "seed_controls": "interval_start_times",
+      "interval_centers_relative_to_anchor_s": [
+        -6.0,
+        0.0,
+        6.0
+      ]
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D08",
+    "name": "GNSS_downsample_5Hz",
+    "family": "gnss_sampling",
+    "parameters": {
+      "operation": "downsample",
+      "sources": [
+        "gnss_position",
+        "receiver_velocity",
+        "dual_yaw"
+      ],
+      "target_rate_hz": 5,
+      "seed_controls": "phase"
+    },
+    "affected_sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D09",
+    "name": "GNSS_downsample_2Hz",
+    "family": "gnss_sampling",
+    "parameters": {
+      "operation": "downsample",
+      "sources": [
+        "gnss_position",
+        "receiver_velocity",
+        "dual_yaw"
+      ],
+      "target_rate_hz": 2,
+      "seed_controls": "phase"
+    },
+    "affected_sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D10",
+    "name": "GNSS_downsample_1Hz",
+    "family": "gnss_sampling",
+    "parameters": {
+      "operation": "downsample",
+      "sources": [
+        "gnss_position",
+        "receiver_velocity",
+        "dual_yaw"
+      ],
+      "target_rate_hz": 1,
+      "seed_controls": "phase"
+    },
+    "affected_sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D11",
+    "name": "GNSS_random_dropout_30",
+    "family": "gnss_sampling",
+    "parameters": {
+      "operation": "random_dropout",
+      "sources": [
+        "gnss_position",
+        "receiver_velocity",
+        "dual_yaw"
+      ],
+      "dropout_ratio": 0.3,
+      "seed_controls": "dropout_pattern"
+    },
+    "affected_sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D12",
+    "name": "GNSS_random_dropout_60",
+    "family": "gnss_sampling",
+    "parameters": {
+      "operation": "random_dropout",
+      "sources": [
+        "gnss_position",
+        "receiver_velocity",
+        "dual_yaw"
+      ],
+      "dropout_ratio": 0.6,
+      "seed_controls": "dropout_pattern"
+    },
+    "affected_sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D13",
+    "name": "position_noise_mild",
+    "family": "position_value",
+    "parameters": {
+      "operation": "gaussian_position_noise",
+      "h_sigma_m": 0.5,
+      "v_sigma_m": 1.0
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D14",
+    "name": "position_noise_medium",
+    "family": "position_value",
+    "parameters": {
+      "operation": "gaussian_position_noise",
+      "h_sigma_m": 1.5,
+      "v_sigma_m": 2.5
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D15",
+    "name": "position_noise_strong",
+    "family": "position_value",
+    "parameters": {
+      "operation": "gaussian_position_noise",
+      "h_sigma_m": 3.0,
+      "v_sigma_m": 5.0
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D16",
+    "name": "position_static_bias_1p5m",
+    "family": "position_value",
+    "parameters": {
+      "operation": "static_position_bias",
+      "horizontal_bias_m": 1.5,
+      "vertical_bias_m": 0.5,
+      "seed_controls": "horizontal_direction_and_vertical_sign"
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D17",
+    "name": "position_static_bias_3m",
+    "family": "position_value",
+    "parameters": {
+      "operation": "static_position_bias",
+      "horizontal_bias_m": 3.0,
+      "vertical_bias_m": 1.0,
+      "seed_controls": "horizontal_direction_and_vertical_sign"
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D18",
+    "name": "position_slow_drift_bias",
+    "family": "position_value",
+    "parameters": {
+      "operation": "slow_drift_bias",
+      "horizontal_start_m": 0.0,
+      "horizontal_end_m": 3.0,
+      "vertical_start_m": 0.0,
+      "vertical_end_m": 1.0
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D19",
+    "name": "position_sinusoidal_multipath",
+    "family": "position_value",
+    "parameters": {
+      "operation": "sinusoidal_multipath",
+      "horizontal_amplitude_m": 2.0,
+      "vertical_amplitude_m": 0.5,
+      "seed_controls": "phase",
+      "angular_time_denominator_s": 30.0,
+      "period_s": 188.49555921538757,
+      "phase_rule": "2*pi*U(component_substream)"
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D20",
+    "name": "position_spike_mild",
+    "family": "position_value",
+    "parameters": {
+      "operation": "position_spike",
+      "probability": 0.02,
+      "horizontal_m": 2.0,
+      "vertical_m": 1.0
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D21",
+    "name": "position_spike_medium",
+    "family": "position_value",
+    "parameters": {
+      "operation": "position_spike",
+      "probability": 0.05,
+      "horizontal_m": 4.0,
+      "vertical_m": 2.0
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D22",
+    "name": "position_spike_burst_strong",
+    "family": "position_value",
+    "parameters": {
+      "operation": "position_burst_spike",
+      "burst_length_epochs_min": 3,
+      "burst_length_epochs_max": 5,
+      "horizontal_m": 8.0,
+      "vertical_m": 4.0
+    },
+    "affected_sources": [
+      "gnss_position"
+    ]
+  },
+  {
+    "type_id": "D23",
+    "name": "position_std_inflation_1p5",
+    "family": "position_std_status",
+    "parameters": {
+      "operation": "std_inflation",
+      "source": "gnss_position_std",
+      "factor": 1.5
+    },
+    "affected_sources": [
+      "gnss_position_std"
+    ]
+  },
+  {
+    "type_id": "D24",
+    "name": "position_std_inflation_2p5",
+    "family": "position_std_status",
+    "parameters": {
+      "operation": "std_inflation",
+      "source": "gnss_position_std",
+      "factor": 2.5
+    },
+    "affected_sources": [
+      "gnss_position_std"
+    ]
+  },
+  {
+    "type_id": "D25",
+    "name": "position_std_inflation_4p0",
+    "family": "position_std_status",
+    "parameters": {
+      "operation": "std_inflation",
+      "source": "gnss_position_std",
+      "factor": 4.0
+    },
+    "affected_sources": [
+      "gnss_position_std"
+    ]
+  },
+  {
+    "type_id": "D26",
+    "name": "position_std_deflation_0p25",
+    "family": "position_std_status",
+    "parameters": {
+      "operation": "std_deflation",
+      "source": "gnss_position_std",
+      "factor": 0.25
+    },
+    "affected_sources": [
+      "gnss_position_std"
+    ]
+  },
+  {
+    "type_id": "D27",
+    "name": "bad_position_optimistic_std",
+    "family": "position_std_status",
+    "parameters": {
+      "operation": "bad_position_optimistic_std",
+      "h_sigma_m": 3.0,
+      "v_sigma_m": 5.0,
+      "std_factor": 0.25
+    },
+    "affected_sources": [
+      "gnss_position",
+      "gnss_position_std"
+    ]
+  },
+  {
+    "type_id": "D28",
+    "name": "good_position_pessimistic_std",
+    "family": "position_std_status",
+    "parameters": {
+      "operation": "good_position_pessimistic_std",
+      "value_change": "unchanged",
+      "std_factor": 4.0
+    },
+    "affected_sources": [
+      "gnss_position_std"
+    ]
+  },
+  {
+    "type_id": "D29",
+    "name": "gnss_status_quality_downgrade_only",
+    "family": "position_std_status",
+    "parameters": {
+      "operation": "status_quality_downgrade_only",
+      "value_change": "unchanged"
+    },
+    "affected_sources": [
+      "gnss_status_quality_flags"
+    ]
+  },
+  {
+    "type_id": "D30",
+    "name": "dual_yaw_outage_5s",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "outage",
+      "sources": [
+        "dual_yaw"
+      ],
+      "duration_s": 5
+    },
+    "affected_sources": [
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D31",
+    "name": "dual_yaw_outage_20s",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "outage",
+      "sources": [
+        "dual_yaw"
+      ],
+      "duration_s": 20
+    },
+    "affected_sources": [
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D32",
+    "name": "dual_yaw_noise_mild",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "dual_yaw_gaussian_noise",
+      "sigma_deg": 1.0,
+      "yaw_wrap": "required"
+    },
+    "affected_sources": [
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D33",
+    "name": "dual_yaw_noise_strong",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "dual_yaw_gaussian_noise",
+      "sigma_deg": 5.0,
+      "yaw_wrap": "required"
+    },
+    "affected_sources": [
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D34",
+    "name": "dual_yaw_spike_5pct",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "dual_yaw_spike",
+      "probability": 0.05,
+      "yaw_wrap": "required",
+      "signed_spike_magnitude_deg": 10.0
+    },
+    "affected_sources": [
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D35",
+    "name": "dual_yaw_spike_10pct",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "dual_yaw_spike",
+      "probability": 0.1,
+      "yaw_wrap": "required",
+      "signed_spike_magnitude_deg": 10.0
+    },
+    "affected_sources": [
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D36",
+    "name": "dual_yaw_std_inflation_1p5",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "yaw_std_inflation",
+      "factor": 1.5
+    },
+    "affected_sources": [
+      "dual_yaw_std"
+    ]
+  },
+  {
+    "type_id": "D37",
+    "name": "dual_yaw_std_inflation_3p0",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "yaw_std_inflation",
+      "factor": 3.0
+    },
+    "affected_sources": [
+      "dual_yaw_std"
+    ]
+  },
+  {
+    "type_id": "D38",
+    "name": "bad_yaw_optimistic_std",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "bad_yaw_optimistic_std",
+      "yaw_noise_sigma_deg": 10.0,
+      "optional_spike_component": true,
+      "yaw_std_factor": 0.25,
+      "yaw_wrap": "required"
+    },
+    "affected_sources": [
+      "dual_yaw",
+      "dual_yaw_std"
+    ]
+  },
+  {
+    "type_id": "D39",
+    "name": "baseline_quality_dropout",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "baseline_quality_dropout",
+      "fields": [
+        "rel_valid",
+        "quality"
+      ],
+      "seed_controls": "unavailable_bursts",
+      "burst_count": 3,
+      "burst_length_valid_epochs_min": 2,
+      "burst_length_valid_epochs_max": 4
+    },
+    "affected_sources": [
+      "dual_yaw_quality"
+    ]
+  },
+  {
+    "type_id": "D40",
+    "name": "baseline_length_jitter_relacc",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "baseline_length_jitter_relacc",
+      "baseline_length_jitter_m": "seeded_small_jitter",
+      "rel_acc_inflation": true,
+      "baseline_length_additive_jitter_sigma_m": 0.03,
+      "preserve_baseline_direction": true,
+      "rel_acc_factor": 2.0,
+      "minimum_baseline_length_m": 0.01,
+      "rel_acc_field_available": false,
+      "rel_acc_no_active_path": true,
+      "baseline_length_solver_visible": false,
+      "solver_runtime_input_expected_invariant": true,
+      "unit_aliasing_forbidden": true
+    },
+    "affected_sources": [
+      "dual_yaw_quality"
+    ]
+  },
+  {
+    "type_id": "D41",
+    "name": "gnss1_gnss2_asymmetric_noise",
+    "family": "dual_yaw",
+    "parameters": {
+      "operation": "gnss1_gnss2_asymmetric_noise",
+      "h_sigma_m": 3.0,
+      "v_sigma_m": 2.0,
+      "seed_controls": "antenna_selection"
+    },
+    "affected_sources": [
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D42",
+    "name": "receiver_velocity_outage_20s",
+    "family": "velocity_raw_doppler",
+    "parameters": {
+      "operation": "outage",
+      "sources": [
+        "receiver_velocity"
+      ],
+      "duration_s": 20
+    },
+    "affected_sources": [
+      "receiver_velocity"
+    ]
+  },
+  {
+    "type_id": "D43",
+    "name": "receiver_velocity_noise_0p5",
+    "family": "velocity_raw_doppler",
+    "parameters": {
+      "operation": "receiver_velocity_noise",
+      "sigma_mps": 0.5
+    },
+    "affected_sources": [
+      "receiver_velocity"
+    ]
+  },
+  {
+    "type_id": "D44",
+    "name": "receiver_velocity_spike_2mps",
+    "family": "velocity_raw_doppler",
+    "parameters": {
+      "operation": "receiver_velocity_spike",
+      "probability": 0.02,
+      "magnitude_mps": 2.0
+    },
+    "affected_sources": [
+      "receiver_velocity"
+    ]
+  },
+  {
+    "type_id": "D45",
+    "name": "receiver_velocity_bad_optimistic_std",
+    "family": "velocity_raw_doppler",
+    "parameters": {
+      "operation": "receiver_velocity_noise_optimistic_std",
+      "sigma_mps": 0.5,
+      "std_factor": 0.25
+    },
+    "affected_sources": [
+      "receiver_velocity",
+      "receiver_velocity_std"
+    ]
+  },
+  {
+    "type_id": "D46",
+    "name": "raw_doppler_outage_20s",
+    "family": "velocity_raw_doppler",
+    "parameters": {
+      "operation": "outage",
+      "sources": [
+        "raw_doppler_velocity"
+      ],
+      "duration_s": 20
+    },
+    "affected_sources": [
+      "raw_doppler_velocity"
+    ]
+  },
+  {
+    "type_id": "D47",
+    "name": "raw_doppler_noise_0p5",
+    "family": "velocity_raw_doppler",
+    "parameters": {
+      "operation": "raw_doppler_velocity_noise",
+      "sigma_mps": 0.5
+    },
+    "affected_sources": [
+      "raw_doppler_velocity"
+    ]
+  },
+  {
+    "type_id": "D48",
+    "name": "raw_doppler_spike_1p5mps",
+    "family": "velocity_raw_doppler",
+    "parameters": {
+      "operation": "raw_doppler_velocity_spike",
+      "probability": 0.02,
+      "magnitude_mps": 1.5
+    },
+    "affected_sources": [
+      "raw_doppler_velocity"
+    ]
+  },
+  {
+    "type_id": "D49",
+    "name": "raw_doppler_bad_optimistic_std",
+    "family": "velocity_raw_doppler",
+    "parameters": {
+      "operation": "raw_doppler_anomaly_optimistic_std",
+      "anomaly": "noise_or_spike_seeded",
+      "optimistic_or_floor_std_policy": true,
+      "gaussian_sigma_mps": 0.5,
+      "std_factor": 0.25,
+      "spike_component": false,
+      "std_floor_component": false
+    },
+    "affected_sources": [
+      "raw_doppler_velocity",
+      "raw_doppler_std"
+    ]
+  },
+  {
+    "type_id": "D50",
+    "name": "raw_receiver_velocity_conflict",
+    "family": "velocity_raw_doppler",
+    "parameters": {
+      "operation": "raw_receiver_velocity_conflict",
+      "conflict_magnitude_mps": 1.0,
+      "receiver_velocity_unchanged": true,
+      "raw_doppler_horizontal_offset_mps": 1.0
+    },
+    "affected_sources": [
+      "raw_doppler_velocity"
+    ]
+  },
+  {
+    "type_id": "D51",
+    "name": "go2_roll_pitch_dropout_noise",
+    "family": "go2_prior_metadata",
+    "parameters": {
+      "operation": "go2_roll_pitch_dropout_noise",
+      "dropout_ratio": 0.5,
+      "remaining_noise_sigma_deg": 3.0
+    },
+    "affected_sources": [
+      "go2_roll_pitch_weak_prior"
+    ]
+  },
+  {
+    "type_id": "D52",
+    "name": "go2_roll_pitch_bias",
+    "family": "go2_prior_metadata",
+    "parameters": {
+      "operation": "go2_roll_pitch_bias",
+      "bias_deg": 2.0,
+      "seed_controls": "roll_pitch_direction"
+    },
+    "affected_sources": [
+      "go2_roll_pitch_weak_prior"
+    ]
+  },
+  {
+    "type_id": "D53",
+    "name": "go2_horizontal_velocity_noise",
+    "family": "go2_prior_metadata",
+    "parameters": {
+      "operation": "go2_horizontal_velocity_noise",
+      "sigma_mps": 1.0
+    },
+    "affected_sources": [
+      "go2_horizontal_velocity_weak_prior"
+    ]
+  },
+  {
+    "type_id": "D54",
+    "name": "go2_horizontal_velocity_scale_dropout",
+    "family": "go2_prior_metadata",
+    "parameters": {
+      "operation": "go2_horizontal_velocity_scale_or_dropout",
+      "scale": 1.5,
+      "dropout_ratio": 0.5,
+      "seed_group_controls": "scale_vs_dropout",
+      "seed_groups": {
+        "seed_00_to_seed_03": {
+          "scale": 1.5,
+          "dropout_ratio": 0.0
+        },
+        "seed_04_to_seed_07": {
+          "scale": 1.0,
+          "dropout_ratio": 0.5
+        },
+        "seed_08": {
+          "scale": 1.5,
+          "dropout_ratio": 0.5
+        }
+      }
+    },
+    "affected_sources": [
+      "go2_horizontal_velocity_weak_prior"
+    ]
+  },
+  {
+    "type_id": "D55",
+    "name": "go2_contact_motion_metadata_uncertain",
+    "family": "go2_prior_metadata",
+    "parameters": {
+      "operation": "go2_contact_motion_metadata_uncertain",
+      "pattern": "missing_or_uncertain_seeded",
+      "selection_ratio": 0.35,
+      "uncertainty_pattern": "contact_uncertain_and_mode_gait_unknown"
+    },
+    "affected_sources": [
+      "go2_source_metadata"
+    ]
+  },
+  {
+    "type_id": "D56",
+    "name": "go2_foot_speed_contact_conflict",
+    "family": "go2_prior_metadata",
+    "parameters": {
+      "operation": "go2_foot_speed_contact_conflict",
+      "pattern": "foot_force_and_foot_speed_conflict_seeded",
+      "selection_ratio": 0.3,
+      "even_pattern": "high_force_high_speed",
+      "odd_pattern": "low_force_low_speed",
+      "seed_08_pattern": "alternating"
+    },
+    "affected_sources": [
+      "go2_source_metadata"
+    ]
+  },
+  {
+    "type_id": "D57",
+    "name": "multi_source_latency_jitter",
+    "family": "multi_source_mixed",
+    "parameters": {
+      "operation": "multi_source_latency_jitter",
+      "components": [
+        "latency_shift",
+        "timestamp_jitter"
+      ],
+      "latency_range_s": [
+        0.1,
+        0.3
+      ],
+      "jitter_range_ms": [
+        20,
+        50
+      ],
+      "jitter_max_range_s": [
+        0.02,
+        0.05
+      ],
+      "per_source_independent_substreams": true,
+      "stable_sort": true
+    },
+    "affected_sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "dual_yaw",
+      "raw_doppler_velocity",
+      "go2_roll_pitch_weak_prior",
+      "go2_horizontal_velocity_weak_prior"
+    ]
+  },
+  {
+    "type_id": "D58",
+    "name": "outage_yaw_spike_then_recovery",
+    "family": "multi_source_mixed",
+    "parameters": {
+      "operation": "mixed_components",
+      "components": [
+        "position_outage_10s",
+        "dual_yaw_spike",
+        "clean_recovery_interval"
+      ],
+      "recovery_interval": "required",
+      "degradation_duration_s": 10.0,
+      "yaw_spike_probability": 0.1,
+      "yaw_spike_magnitude_deg": 10.0,
+      "recovery_duration_s": 20.0
+    },
+    "affected_sources": [
+      "gnss_position",
+      "dual_yaw"
+    ]
+  },
+  {
+    "type_id": "D59",
+    "name": "bad_position_good_yaw_raw_conflict",
+    "family": "multi_source_mixed",
+    "parameters": {
+      "operation": "mixed_components",
+      "components": [
+        "bad_position",
+        "good_yaw",
+        "raw_receiver_velocity_conflict"
+      ],
+      "conflict_magnitude_mps": 1.0
+    },
+    "affected_sources": [
+      "gnss_position",
+      "raw_doppler_velocity"
+    ]
+  },
+  {
+    "type_id": "D60",
+    "name": "multisource_bad_optimistic_then_recovery",
+    "family": "multi_source_mixed",
+    "parameters": {
+      "operation": "mixed_components",
+      "components": [
+        "bad_position_optimistic_std",
+        "bad_yaw_optimistic_std",
+        "bad_velocity_optimistic_std",
+        "clean_recovery_interval"
+      ],
+      "recovery_interval": "required",
+      "degradation_duration_s": 20.0,
+      "recovery_duration_s": 20.0
+    },
+    "affected_sources": [
+      "gnss_position",
+      "gnss_position_std",
+      "dual_yaw",
+      "dual_yaw_std",
+      "receiver_velocity",
+      "receiver_velocity_std",
+      "raw_doppler_velocity",
+      "raw_doppler_std"
+    ]
+  }
+]

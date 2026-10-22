@@ -1,0 +1,839 @@
+[
+  {
+    "case_id": "D61_10s_seed_00",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_00",
+    "seed_value": 260306001,
+    "anchor_time_s": 206.2,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 201.2,
+    "outage_end_s": 211.2,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 201.2, \"end_s\": 211.2, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D61_10s_seed_01",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_01",
+    "seed_value": 260306002,
+    "anchor_time_s": 107.20639,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 102.20639,
+    "outage_end_s": 112.20639,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 102.20639, \"end_s\": 112.20639, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D61_10s_seed_02",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_02",
+    "seed_value": 260306003,
+    "anchor_time_s": 189.207044,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 184.207044,
+    "outage_end_s": 194.207044,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 184.207044, \"end_s\": 194.207044, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D61_10s_seed_03",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_03",
+    "seed_value": 260306004,
+    "anchor_time_s": 227.201927,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 222.201927,
+    "outage_end_s": 232.201927,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 222.201927, \"end_s\": 232.201927, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D61_10s_seed_04",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_04",
+    "seed_value": 260306005,
+    "anchor_time_s": 148.204964,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 143.204964,
+    "outage_end_s": 153.204964,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 143.204964, \"end_s\": 153.204964, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D61_10s_seed_05",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_05",
+    "seed_value": 260306006,
+    "anchor_time_s": 226.215803,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 221.215803,
+    "outage_end_s": 231.215803,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 221.215803, \"end_s\": 231.215803, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D61_10s_seed_06",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_06",
+    "seed_value": 260306007,
+    "anchor_time_s": 258.208267,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 253.20826699999998,
+    "outage_end_s": 263.208267,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 253.20826699999998, \"end_s\": 263.208267, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D61_10s_seed_07",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_07",
+    "seed_value": 260306008,
+    "anchor_time_s": 247.210403,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 242.210403,
+    "outage_end_s": 252.210403,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 242.210403, \"end_s\": 252.210403, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D61_10s_seed_08",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_08",
+    "seed_value": 260306009,
+    "anchor_time_s": 299.203403,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 294.203403,
+    "outage_end_s": 304.203403,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 294.203403, \"end_s\": 304.203403, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D61_20s_seed_00",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_00",
+    "seed_value": 260306001,
+    "anchor_time_s": 206.2,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 196.2,
+    "outage_end_s": 216.2,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 196.2, \"end_s\": 216.2, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D61_20s_seed_01",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_01",
+    "seed_value": 260306002,
+    "anchor_time_s": 107.20639,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 97.20639,
+    "outage_end_s": 117.20639,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 97.20639, \"end_s\": 117.20639, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D61_20s_seed_02",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_02",
+    "seed_value": 260306003,
+    "anchor_time_s": 189.207044,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 179.207044,
+    "outage_end_s": 199.207044,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 179.207044, \"end_s\": 199.207044, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D61_20s_seed_03",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_03",
+    "seed_value": 260306004,
+    "anchor_time_s": 227.201927,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 217.201927,
+    "outage_end_s": 237.201927,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 217.201927, \"end_s\": 237.201927, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D61_20s_seed_04",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_04",
+    "seed_value": 260306005,
+    "anchor_time_s": 148.204964,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 138.204964,
+    "outage_end_s": 158.204964,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 138.204964, \"end_s\": 158.204964, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D61_20s_seed_05",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_05",
+    "seed_value": 260306006,
+    "anchor_time_s": 226.215803,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 216.215803,
+    "outage_end_s": 236.215803,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 216.215803, \"end_s\": 236.215803, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D61_20s_seed_06",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_06",
+    "seed_value": 260306007,
+    "anchor_time_s": 258.208267,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 248.20826699999998,
+    "outage_end_s": 268.208267,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 248.20826699999998, \"end_s\": 268.208267, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D61_20s_seed_07",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_07",
+    "seed_value": 260306008,
+    "anchor_time_s": 247.210403,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 237.210403,
+    "outage_end_s": 257.21040300000004,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 237.210403, \"end_s\": 257.21040300000004, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D61_20s_seed_08",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_08",
+    "seed_value": 260306009,
+    "anchor_time_s": 299.203403,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 289.203403,
+    "outage_end_s": 309.203403,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 289.203403, \"end_s\": 309.203403, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D61_30s_seed_00",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_00",
+    "seed_value": 260306001,
+    "anchor_time_s": 206.2,
+    "duration_s": 30,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 191.2,
+    "outage_end_s": 221.2,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 191.2, \"end_s\": 221.2, \"duration_s\": 30}"
+  },
+  {
+    "case_id": "D61_30s_seed_01",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_01",
+    "seed_value": 260306002,
+    "anchor_time_s": 107.20639,
+    "duration_s": 30,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 92.20639,
+    "outage_end_s": 122.20639,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 92.20639, \"end_s\": 122.20639, \"duration_s\": 30}"
+  },
+  {
+    "case_id": "D61_30s_seed_02",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_02",
+    "seed_value": 260306003,
+    "anchor_time_s": 189.207044,
+    "duration_s": 30,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 174.207044,
+    "outage_end_s": 204.207044,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 174.207044, \"end_s\": 204.207044, \"duration_s\": 30}"
+  },
+  {
+    "case_id": "D61_30s_seed_03",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_03",
+    "seed_value": 260306004,
+    "anchor_time_s": 227.201927,
+    "duration_s": 30,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 212.201927,
+    "outage_end_s": 242.201927,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 212.201927, \"end_s\": 242.201927, \"duration_s\": 30}"
+  },
+  {
+    "case_id": "D61_30s_seed_04",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_04",
+    "seed_value": 260306005,
+    "anchor_time_s": 148.204964,
+    "duration_s": 30,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 133.204964,
+    "outage_end_s": 163.204964,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 133.204964, \"end_s\": 163.204964, \"duration_s\": 30}"
+  },
+  {
+    "case_id": "D61_30s_seed_05",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_05",
+    "seed_value": 260306006,
+    "anchor_time_s": 226.215803,
+    "duration_s": 30,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 211.215803,
+    "outage_end_s": 241.215803,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 211.215803, \"end_s\": 241.215803, \"duration_s\": 30}"
+  },
+  {
+    "case_id": "D61_30s_seed_06",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_06",
+    "seed_value": 260306007,
+    "anchor_time_s": 258.208267,
+    "duration_s": 30,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 243.20826699999998,
+    "outage_end_s": 273.208267,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 243.20826699999998, \"end_s\": 273.208267, \"duration_s\": 30}"
+  },
+  {
+    "case_id": "D61_30s_seed_07",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_07",
+    "seed_value": 260306008,
+    "anchor_time_s": 247.210403,
+    "duration_s": 30,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 232.210403,
+    "outage_end_s": 262.21040300000004,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 232.210403, \"end_s\": 262.21040300000004, \"duration_s\": 30}"
+  },
+  {
+    "case_id": "D61_30s_seed_08",
+    "degradation_type_id": "D61",
+    "seed_index": "seed_08",
+    "seed_value": 260306009,
+    "anchor_time_s": 299.203403,
+    "duration_s": 30,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 284.203403,
+    "outage_end_s": 314.203403,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler",
+      "dual_yaw"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 284.203403, \"end_s\": 314.203403, \"duration_s\": 30}"
+  },
+  {
+    "case_id": "D62_10s_seed_00",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_00",
+    "seed_value": 260306001,
+    "anchor_time_s": 206.2,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 201.2,
+    "outage_end_s": 211.2,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 201.2, \"end_s\": 211.2, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D62_10s_seed_01",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_01",
+    "seed_value": 260306002,
+    "anchor_time_s": 107.20639,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 102.20639,
+    "outage_end_s": 112.20639,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 102.20639, \"end_s\": 112.20639, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D62_10s_seed_02",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_02",
+    "seed_value": 260306003,
+    "anchor_time_s": 189.207044,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 184.207044,
+    "outage_end_s": 194.207044,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 184.207044, \"end_s\": 194.207044, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D62_10s_seed_03",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_03",
+    "seed_value": 260306004,
+    "anchor_time_s": 227.201927,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 222.201927,
+    "outage_end_s": 232.201927,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 222.201927, \"end_s\": 232.201927, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D62_10s_seed_04",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_04",
+    "seed_value": 260306005,
+    "anchor_time_s": 148.204964,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 143.204964,
+    "outage_end_s": 153.204964,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 143.204964, \"end_s\": 153.204964, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D62_10s_seed_05",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_05",
+    "seed_value": 260306006,
+    "anchor_time_s": 226.215803,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 221.215803,
+    "outage_end_s": 231.215803,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 221.215803, \"end_s\": 231.215803, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D62_10s_seed_06",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_06",
+    "seed_value": 260306007,
+    "anchor_time_s": 258.208267,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 253.20826699999998,
+    "outage_end_s": 263.208267,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 253.20826699999998, \"end_s\": 263.208267, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D62_10s_seed_07",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_07",
+    "seed_value": 260306008,
+    "anchor_time_s": 247.210403,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 242.210403,
+    "outage_end_s": 252.210403,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 242.210403, \"end_s\": 252.210403, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D62_10s_seed_08",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_08",
+    "seed_value": 260306009,
+    "anchor_time_s": 299.203403,
+    "duration_s": 10,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 294.203403,
+    "outage_end_s": 304.203403,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 294.203403, \"end_s\": 304.203403, \"duration_s\": 10}"
+  },
+  {
+    "case_id": "D62_20s_seed_00",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_00",
+    "seed_value": 260306001,
+    "anchor_time_s": 206.2,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 196.2,
+    "outage_end_s": 216.2,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 196.2, \"end_s\": 216.2, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D62_20s_seed_01",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_01",
+    "seed_value": 260306002,
+    "anchor_time_s": 107.20639,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 97.20639,
+    "outage_end_s": 117.20639,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 97.20639, \"end_s\": 117.20639, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D62_20s_seed_02",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_02",
+    "seed_value": 260306003,
+    "anchor_time_s": 189.207044,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 179.207044,
+    "outage_end_s": 199.207044,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 179.207044, \"end_s\": 199.207044, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D62_20s_seed_03",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_03",
+    "seed_value": 260306004,
+    "anchor_time_s": 227.201927,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 217.201927,
+    "outage_end_s": 237.201927,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 217.201927, \"end_s\": 237.201927, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D62_20s_seed_04",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_04",
+    "seed_value": 260306005,
+    "anchor_time_s": 148.204964,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 138.204964,
+    "outage_end_s": 158.204964,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 138.204964, \"end_s\": 158.204964, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D62_20s_seed_05",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_05",
+    "seed_value": 260306006,
+    "anchor_time_s": 226.215803,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 216.215803,
+    "outage_end_s": 236.215803,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 216.215803, \"end_s\": 236.215803, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D62_20s_seed_06",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_06",
+    "seed_value": 260306007,
+    "anchor_time_s": 258.208267,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 248.20826699999998,
+    "outage_end_s": 268.208267,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 248.20826699999998, \"end_s\": 268.208267, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D62_20s_seed_07",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_07",
+    "seed_value": 260306008,
+    "anchor_time_s": 247.210403,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 237.210403,
+    "outage_end_s": 257.21040300000004,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 237.210403, \"end_s\": 257.21040300000004, \"duration_s\": 20}"
+  },
+  {
+    "case_id": "D62_20s_seed_08",
+    "degradation_type_id": "D62",
+    "seed_index": "seed_08",
+    "seed_value": 260306009,
+    "anchor_time_s": 299.203403,
+    "duration_s": 20,
+    "window_start_s": 66.0,
+    "window_end_s": 340.0,
+    "outage_start_s": 289.203403,
+    "outage_end_s": 309.203403,
+    "sources": [
+      "gnss_position",
+      "receiver_velocity",
+      "raw_doppler"
+    ],
+    "degradation_parameters_json": "{\"start_s\": 289.203403, \"end_s\": 309.203403, \"duration_s\": 20}"
+  }
+]

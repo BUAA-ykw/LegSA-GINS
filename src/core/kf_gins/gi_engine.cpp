@@ -1,0 +1,989 @@
+// LegSA-GINS. Inertial backbone derived from KF-GINS; see THIRD_PARTY_NOTICES.md.
+#include "legsa_gins/kf_gins/gi_engine.hpp"
+
+#include "legsa_gins/common/earth.hpp"
+#include "legsa_gins/common/rotation.hpp"
+#include "legsa_gins/factors/go2_weak_prior_factor.hpp"
+#include "legsa_gins/factors/raw_doppler_factor.hpp"
+#include "legsa_gins/kf_gins/insmech.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <numeric>
+#include <sstream>
+#include <stdexcept>
+#include <utility>
+
+namespace legsa_gins {
+namespace {
+
+Vec3 vecFromDx(const std::vector<double>& dx, std::size_t offset) {
+  return makeVec3(dx.at(offset), dx.at(offset + 1), dx.at(offset + 2));
+}
+
+void setDiagonalBlock(Matrix& matrix, std::size_t offset, const Vec3& std_value) {
+  for (std::size_t i = 0; i < 3; ++i) {
+    matrix(offset + i, offset + i) = std_value[i] * std_value[i];
+  }
+}
+
+void setDiagonalBlockValue(Matrix& matrix, std::size_t offset, const Vec3& value) {
+  for (std::size_t i = 0; i < 3; ++i) {
+    matrix(offset + i, offset + i) = value[i];
+  }
+}
+
+Matrix3 diag3(const Vec3& value) {
+  Matrix3 out = zeroMatrix3();
+  out[0][0] = value[0];
+  out[1][1] = value[1];
+  out[2][2] = value[2];
+  return out;
+}
+
+Vec3 positiveStd(const Vec3& value, double floor_value) {
+  return makeVec3(std::max(std::fabs(value[0]), floor_value),
+                  std::max(std::fabs(value[1]), floor_value),
+                  std::max(std::fabs(value[2]), floor_value));
+}
+
+double matrixTrace(const Matrix& matrix) {
+  const std::size_t n = std::min(matrix.rows, matrix.cols);
+  double out = 0.0;
+  for (std::size_t i = 0; i < n; ++i) {
+    out += matrix(i, i);
+  }
+  return out;
+}
+
+double vectorNorm(const std::vector<double>& values) {
+  double sum = 0.0;
+  for (double value : values) {
+    sum += value * value;
+  }
+  return std::sqrt(sum);
+}
+
+double dotVector(const std::vector<double>& lhs, const std::vector<double>& rhs) {
+  const std::size_t n = std::min(lhs.size(), rhs.size());
+  double out = 0.0;
+  for (std::size_t i = 0; i < n; ++i) {
+    out += lhs[i] * rhs[i];
+  }
+  return out;
+}
+
+double percentile(std::vector<double> values, double q) {
+  if (values.empty()) {
+    return 0.0;
+  }
+  std::sort(values.begin(), values.end());
+  const double clamped = std::max(0.0, std::min(1.0, q));
+  const std::size_t index = static_cast<std::size_t>(clamped * static_cast<double>(values.size() - 1));
+  return values[index];
+}
+
+}
+
+GIEngine::GIEngine(PortOptions options)
+    : options_(std::move(options)), Cov_(RANK, RANK, 0.0), Qc_(NOISERANK, NOISERANK, 0.0),
+      dx_(RANK, 0.0), source_aware_policy_(options_.source_aware_policy_config) {
+  initializeQc();
+}
+
+void GIEngine::initialize(const NavState& initial_state) {
+  pvacur_ = initial_state;
+  pvacur_.time = initial_state.time;
+  pvacur_.qbn = Rotation::euler2quaternion(pvacur_.euler_rad);
+  pvacur_.cbn = Rotation::quaternion2matrix(pvacur_.qbn);
+  imuerror_ = options_.init_imu_error;
+  pvacur_.imu_error = imuerror_;
+  pvapre_ = pvacur_;
+  timestamp_ = pvacur_.time;
+  initializeCovariance();
+  zeroVector(dx_);
+  initialized_ = true;
+}
+
+void GIEngine::setRawDopplerVelocityMeasurements(const std::vector<RawDopplerVelocityMeasurement>& measurements,
+                                                 const RawDopplerFactorStatus& status) {
+  raw_doppler_measurements_ = measurements;
+  raw_doppler_status_ = status;
+  raw_doppler_status_.code_present = true;
+  raw_doppler_status_.epoch_count = measurements.size();
+  if (raw_doppler_status_.valid_epoch_count == 0) {
+    raw_doppler_status_.valid_epoch_count = static_cast<std::size_t>(std::count_if(
+        measurements.begin(), measurements.end(), [](const RawDopplerVelocityMeasurement& measurement) {
+          return measurement.provider_status == "available";
+        }));
+  }
+  raw_doppler_status_.solver_enabled =
+      options_.raw_doppler_config.enable_raw_doppler && status.solver_enabled && status.provider_status == "available";
+  if (raw_doppler_status_.factor_source.empty() || raw_doppler_status_.factor_source == "none") {
+    raw_doppler_status_.factor_source = options_.raw_doppler_config.raw_doppler_factor_source;
+  }
+  if (!raw_doppler_status_.solver_enabled && raw_doppler_status_.provider_status.empty()) {
+    raw_doppler_status_.provider_status = "provider_missing_sat_state_export";
+  }
+}
+
+void GIEngine::setGo2AttitudeWeakPriors(const std::vector<Go2AttitudeWeakPriorMeasurement>& measurements,
+                                        const Go2AttitudeWeakPriorStatus& status) {
+  go2_attitude_priors_ = measurements;
+  go2_attitude_prior_status_ = status;
+  go2_attitude_prior_status_.code_present = true;
+  go2_attitude_prior_status_.prior_count = measurements.size();
+  if (go2_attitude_prior_status_.valid_prior_count == 0) {
+    go2_attitude_prior_status_.valid_prior_count = static_cast<std::size_t>(std::count_if(
+        measurements.begin(), measurements.end(), [](const Go2AttitudeWeakPriorMeasurement& measurement) {
+          return measurement.source_status == "active";
+        }));
+  }
+  go2_attitude_prior_status_.solver_enabled =
+      options_.go2_attitude_prior_config.enable_go2_attitude_weak_prior && status.solver_enabled &&
+      status.provider_status == "available";
+}
+
+void GIEngine::setGo2VelocityDiagnosticPriors(
+    const std::vector<Go2VelocityDiagnosticPriorMeasurement>& measurements,
+    const Go2VelocityDiagnosticPriorStatus& status) {
+  go2_velocity_diagnostic_priors_ = measurements;
+  go2_velocity_diagnostic_prior_status_ = status;
+  go2_velocity_diagnostic_prior_status_.code_present = true;
+  go2_velocity_diagnostic_prior_status_.prior_count = measurements.size();
+  if (go2_velocity_diagnostic_prior_status_.valid_prior_count == 0) {
+    const bool controlled_horizontal =
+        options_.go2_velocity_prior_diagnostic_config.enable_go2_horizontal_velocity_prior;
+    go2_velocity_diagnostic_prior_status_.valid_prior_count = static_cast<std::size_t>(std::count_if(
+        measurements.begin(), measurements.end(), [controlled_horizontal](const Go2VelocityDiagnosticPriorMeasurement& measurement) {
+          return measurement.source_status == "active" && measurement.update_flag && !measurement.go2_velocity_truth_claim &&
+                 (measurement.diagnostic_only || controlled_horizontal);
+        }));
+  }
+  go2_velocity_diagnostic_prior_status_.solver_enabled =
+      options_.go2_velocity_prior_diagnostic_config.enable_go2_velocity_prior_diagnostic &&
+      status.solver_enabled && status.provider_status == "available" &&
+      (options_.go2_velocity_prior_diagnostic_config.go2_diagnostic_prior_only ||
+       options_.go2_velocity_prior_diagnostic_config.enable_go2_horizontal_velocity_prior);
+  go2_velocity_diagnostic_prior_status_.horizontal_only =
+      std::any_of(measurements.begin(), measurements.end(), [](const Go2VelocityDiagnosticPriorMeasurement& measurement) {
+        return measurement.std_ned_mps[2] >= 999.0 ||
+               measurement.prior_policy.find("horizontal") != std::string::npos;
+      });
+  go2_velocity_diagnostic_prior_status_.vertical_disabled = go2_velocity_diagnostic_prior_status_.horizontal_only;
+  go2_velocity_diagnostic_prior_status_.controlled_activation =
+      options_.go2_velocity_prior_diagnostic_config.enable_go2_horizontal_velocity_prior;
+}
+
+void GIEngine::addImuData(const ImuData& imu, bool compensate) {
+  imupre_ = imucur_;
+  imucur_ = imu;
+  if (compensate) {
+    imuCompensateInPlace(imucur_);
+  }
+}
+
+void GIEngine::addGnssData(const GnssData& gnss) {
+  gnssdata_ = gnss;
+  if (!gnssdata_.validity_explicit) {
+    gnssdata_.has_position = gnssdata_.has_velocity = gnssdata_.has_yaw = true;
+  }
+  gnssdata_.isvalid = gnssdata_.has_position || gnssdata_.has_velocity || gnssdata_.has_yaw;
+}
+
+int GIEngine::isToUpdate() const {
+  const double updatetime = gnssdata_.isvalid ? gnssdata_.time : -1.0;
+  return isToUpdate(imupre_.time, imucur_.time, updatetime);
+}
+
+int GIEngine::isToUpdate(double imutime1, double imutime2, double updatetime) const {
+  if (std::fabs(imutime1 - updatetime) < TIME_ALIGN_ERR) {
+    return 1;
+  }
+  if (std::fabs(imutime2 - updatetime) <= TIME_ALIGN_ERR) {
+    return 2;
+  }
+  if (imutime1 < updatetime && updatetime < imutime2) {
+    return 3;
+  }
+  return 0;
+}
+
+ImuData GIEngine::imuInterpolate(const ImuData& previous, ImuData& current, double time) const {
+  if (previous.time > time || current.time < time) {
+    return current;
+  }
+  const double lambda = (time - previous.time) / (current.time - previous.time);
+  ImuData midimu = current;
+  midimu.time = time;
+  midimu.dtheta = scale(current.dtheta, lambda);
+  midimu.dvel = scale(current.dvel, lambda);
+  midimu.dt = time - previous.time;
+  midimu.compensated = false;
+  current.dtheta = subtract(current.dtheta, midimu.dtheta);
+  current.dvel = subtract(current.dvel, midimu.dvel);
+  current.dt = current.dt - midimu.dt;
+  current.compensated = false;
+  return midimu;
+}
+
+ImuData GIEngine::imuCompensate(const ImuData& imu) const {
+  ImuData out = imu;
+  imuCompensateInPlace(out);
+  return out;
+}
+
+void GIEngine::imuCompensateInPlace(ImuData& imu) const {
+  if (imu.compensated) {
+    return;
+  }
+  imu.dtheta = subtract(imu.dtheta, scale(imuerror_.gyrbias, imu.dt));
+  imu.dvel = subtract(imu.dvel, scale(imuerror_.accbias, imu.dt));
+  imu.dtheta = cwiseDivide(imu.dtheta, add(makeVec3(1.0, 1.0, 1.0), imuerror_.gyrscale));
+  imu.dvel = cwiseDivide(imu.dvel, add(makeVec3(1.0, 1.0, 1.0), imuerror_.accscale));
+  imu.compensated = true;
+}
+
+void GIEngine::insPropagation() {
+  insPropagation(imupre_, imucur_);
+}
+
+void GIEngine::insPropagation(ImuData& imupre, ImuData& imucur) {
+  imuCompensateInPlace(imucur);
+  INSMech::insMech(pvapre_, pvacur_, imupre, imucur);
+  Matrix F(RANK, RANK, 0.0);
+  Matrix G(RANK, NOISERANK, 0.0);
+  Matrix Phi(RANK, RANK, 0.0);
+  Matrix Qd(RANK, RANK, 0.0);
+  buildErrorStateMatrices(imucur, F, G, Phi, Qd);
+  EKFPredict(Phi, Qd);
+  timestamp_ = imucur.time;
+  ++propagation_count_;
+}
+
+void GIEngine::gnssUpdate() {
+  gnssUpdate(gnssdata_);
+}
+
+void GIEngine::gnssUpdate(GnssData& gnss) {
+  if (!gnss.isvalid) return;
+  GnssData policy_gnss = gnss;
+  if (policy_gnss.has_position) applyPositionUpdate(policy_gnss);
+  if (options_.enable_basic_dual_yaw_baseline) {
+    if (policy_gnss.has_yaw && options_.enable_dual_yaw_update) applyBasicDualYawUpdate(policy_gnss);
+    gnss.isvalid = false;
+    ++update_count_;
+    return;
+  }
+  if (policy_gnss.has_yaw && options_.enable_dual_yaw_update && options_.yaw_scheme_C_enabled)
+    applyYawUpdate(policy_gnss);
+  if (policy_gnss.has_velocity && options_.enable_receiver_velocity_update) applyVelocityUpdate(policy_gnss);
+  applyRawDopplerUpdateForTime(policy_gnss.time);
+  applyGo2VelocityDiagnosticPriorForTime(policy_gnss.time);
+  applyGo2AttitudeWeakPriorForTime(policy_gnss.time);
+  gnss.isvalid = false;
+  ++update_count_;
+}
+
+void GIEngine::EKFPredict() {
+  Matrix F(RANK, RANK, 0.0);
+  Matrix G(RANK, NOISERANK, 0.0);
+  Matrix Phi(RANK, RANK, 0.0);
+  Matrix Qd(RANK, RANK, 0.0);
+  buildErrorStateMatrices(imucur_, F, G, Phi, Qd);
+  EKFPredict(Phi, Qd);
+}
+
+void GIEngine::EKFPredict(const Matrix& Phi, const Matrix& Qd) {
+  Cov_ = add(multiply(multiply(Phi, Cov_), transpose(Phi)), Qd);
+  dx_ = multiply(Phi, dx_);
+}
+
+void GIEngine::EKFUpdate(const std::vector<double>& dz, const Matrix& H, const Matrix& R) {
+  if (H.cols != RANK || dz.size() != H.rows || R.rows != H.rows || R.cols != H.rows) {
+    throw std::runtime_error("EKFUpdate dimension mismatch");
+  }
+  const Matrix Ht = transpose(H);
+  const Matrix S = add(multiply(multiply(H, Cov_), Ht), R);
+  const Matrix K = multiply(multiply(Cov_, Ht), inverse(S));
+  const std::vector<double> Hdx = multiply(H, dx_);
+  std::vector<double> residual(dz.size(), 0.0);
+  for (std::size_t i = 0; i < dz.size(); ++i) {
+    residual[i] = dz[i] - Hdx[i];
+  }
+  const std::vector<double> delta = multiply(K, residual);
+  for (std::size_t i = 0; i < dx_.size(); ++i) {
+    dx_[i] += delta[i];
+  }
+  const Matrix I = identityMatrix(RANK);
+  const Matrix IKH = subtract(I, multiply(K, H));
+  Cov_ = add(multiply(multiply(IKH, Cov_), transpose(IKH)), multiply(multiply(K, R), transpose(K)));
+}
+
+void GIEngine::stateFeedback() {
+  const Vec3 dx_pos = vecFromDx(dx_, P_ID);
+  const Vec3 dx_vel = vecFromDx(dx_, V_ID);
+  Vec3 dx_phi = vecFromDx(dx_, PHI_ID);
+  pvacur_.pos_blh_rad_m = subtract(pvacur_.pos_blh_rad_m, multiply(Earth::DRi(pvacur_.pos_blh_rad_m), dx_pos));
+  pvacur_.vel_ned_mps = subtract(pvacur_.vel_ned_mps, dx_vel);
+  const Quaternion qpn = Rotation::rotvec2quaternion(dx_phi);
+  pvacur_.qbn = Rotation::multiply(qpn, pvacur_.qbn);
+  pvacur_.cbn = Rotation::quaternion2matrix(pvacur_.qbn);
+  pvacur_.euler_rad = Rotation::matrix2euler(pvacur_.cbn);
+  imuerror_.gyrbias = add(imuerror_.gyrbias, vecFromDx(dx_, BG_ID));
+  imuerror_.accbias = add(imuerror_.accbias, vecFromDx(dx_, BA_ID));
+  imuerror_.gyrscale = add(imuerror_.gyrscale, vecFromDx(dx_, SG_ID));
+  imuerror_.accscale = add(imuerror_.accscale, vecFromDx(dx_, SA_ID));
+  pvacur_.imu_error = imuerror_;
+  zeroVector(dx_);
+}
+
+void GIEngine::newImuProcess() {
+  if (!initialized_) {
+    return;
+  }
+  timestamp_ = imucur_.time;
+  const double updatetime = gnssdata_.isvalid ? gnssdata_.time : -1.0;
+  const int res = isToUpdate(imupre_.time, imucur_.time, updatetime);
+  if (res == 0) {
+    insPropagation(imupre_, imucur_);
+  } else if (res == 1) {
+    gnssUpdate(gnssdata_);
+    stateFeedback();
+    pvapre_ = pvacur_;
+    insPropagation(imupre_, imucur_);
+  } else if (res == 2) {
+    insPropagation(imupre_, imucur_);
+    gnssUpdate(gnssdata_);
+    stateFeedback();
+  } else {
+    ImuData midimu = imuInterpolate(imupre_, imucur_, updatetime);
+    insPropagation(imupre_, midimu);
+    gnssUpdate(gnssdata_);
+    stateFeedback();
+    pvapre_ = pvacur_;
+    insPropagation(midimu, imucur_);
+  }
+  if (!checkCov()) {
+    ++cov_health_fail_count_;
+    if (cov_health_fail_count_ == 1) {
+      cov_health_first_failure_time_ = timestamp_;
+    }
+  }
+  pvapre_ = pvacur_;
+  imupre_ = imucur_;
+}
+
+bool GIEngine::checkCov() const {
+  for (std::size_t i = 0; i < RANK; ++i) {
+    if (!std::isfinite(Cov_(i, i)) || Cov_(i, i) < 0.0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+const NavState& GIEngine::navState() const {
+  return pvacur_;
+}
+
+NavState GIEngine::getNavState() const {
+  return pvacur_;
+}
+
+const std::vector<double>& GIEngine::getCovariance() const {
+  return Cov_.data;
+}
+
+double GIEngine::timestamp() const {
+  return timestamp_;
+}
+
+std::size_t GIEngine::propagationCount() const {
+  return propagation_count_;
+}
+
+std::size_t GIEngine::covHealthFailCount() const {
+  return cov_health_fail_count_;
+}
+
+double GIEngine::covHealthFirstFailureTime() const {
+  return cov_health_first_failure_time_;
+}
+
+std::size_t GIEngine::updateCount() const {
+  return update_count_;
+}
+
+std::size_t GIEngine::positionUpdateCount() const {
+  return position_update_count_;
+}
+
+std::size_t GIEngine::velocityUpdateCount() const {
+  return velocity_update_count_;
+}
+
+std::size_t GIEngine::yawUpdateCount() const {
+  return yaw_update_count_;
+}
+
+std::size_t GIEngine::yawNormalCount() const {
+  return yaw_normal_count_;
+}
+
+std::size_t GIEngine::yawDownweightCount() const {
+  return yaw_downweight_count_;
+}
+
+std::size_t GIEngine::yawRejectCount() const {
+  return yaw_reject_count_;
+}
+
+std::size_t GIEngine::sourceAwareEvaluationCount() const {
+  return source_aware_evaluation_count_;
+}
+
+std::size_t GIEngine::sourceAwareWeightChangedCount() const {
+  return source_aware_weight_changed_count_;
+}
+
+std::size_t GIEngine::rawDopplerUpdateCount() const {
+  return raw_doppler_status_.update_count;
+}
+
+std::size_t GIEngine::rawDopplerRejectCount() const {
+  return raw_doppler_status_.reject_count;
+}
+
+std::size_t GIEngine::rawDopplerEpochCount() const {
+  return raw_doppler_status_.epoch_count;
+}
+
+std::size_t GIEngine::rawDopplerSatCountMin() const {
+  return raw_doppler_status_.sat_count_min;
+}
+
+std::size_t GIEngine::rawDopplerSatCountMedian() const {
+  return raw_doppler_status_.sat_count_median;
+}
+
+std::size_t GIEngine::rawDopplerSatCountMax() const {
+  return raw_doppler_status_.sat_count_max;
+}
+
+double GIEngine::rawDopplerResidualP95() const {
+  return raw_doppler_status_.residual_p95_mps;
+}
+
+RawDopplerFactorStatus GIEngine::rawDopplerStatus() const {
+  return raw_doppler_status_;
+}
+
+std::size_t GIEngine::go2AttitudeWeakPriorUpdateCount() const {
+  return go2_attitude_prior_status_.update_count;
+}
+
+std::size_t GIEngine::go2AttitudeWeakPriorRejectCount() const {
+  return go2_attitude_prior_status_.reject_count;
+}
+
+Go2AttitudeWeakPriorStatus GIEngine::go2AttitudeWeakPriorStatus() const {
+  return go2_attitude_prior_status_;
+}
+
+std::size_t GIEngine::go2VelocityDiagnosticPriorUpdateCount() const {
+  return go2_velocity_diagnostic_prior_status_.update_count;
+}
+
+std::size_t GIEngine::go2VelocityDiagnosticPriorRejectCount() const {
+  return go2_velocity_diagnostic_prior_status_.reject_count;
+}
+
+Go2VelocityDiagnosticPriorStatus GIEngine::go2VelocityDiagnosticPriorStatus() const {
+  return go2_velocity_diagnostic_prior_status_;
+}
+
+source_aware::SourceAwareRuntimeStats GIEngine::sourceAwareStats() const {
+  return source_aware_trace_.stats();
+}
+
+void GIEngine::writeSourceAwareTrace(const std::string& output_dir) const {
+  if (options_.source_aware_policy_config.source_aware_trace_enabled)
+    source_aware_trace_.writeCsv(output_dir);
+}
+
+void GIEngine::initializeCovariance() {
+  Cov_ = Matrix(RANK, RANK, 0.0);
+  setDiagonalBlock(Cov_, P_ID, positiveStd(options_.init_pos_std_m, 1.0e-6));
+  setDiagonalBlock(Cov_, V_ID, positiveStd(options_.init_vel_std_mps, 1.0e-6));
+  setDiagonalBlock(Cov_, PHI_ID, positiveStd(options_.init_att_std_rad, 1.0e-9));
+  setDiagonalBlock(Cov_, BG_ID, positiveStd(options_.init_imu_error_std.gyrbias, options_.imunoise.gyrbias_std[0]));
+  setDiagonalBlock(Cov_, BA_ID, positiveStd(options_.init_imu_error_std.accbias, options_.imunoise.accbias_std[0]));
+  setDiagonalBlock(Cov_, SG_ID, positiveStd(options_.init_imu_error_std.gyrscale, options_.imunoise.gyrscale_std[0]));
+  setDiagonalBlock(Cov_, SA_ID, positiveStd(options_.init_imu_error_std.accscale, options_.imunoise.accscale_std[0]));
+}
+
+void GIEngine::initializeQc() {
+  Qc_ = Matrix(NOISERANK, NOISERANK, 0.0);
+  const ImuNoise& n = options_.imunoise;
+  setDiagonalBlockValue(Qc_, ARW_ID, cwiseProduct(n.gyr_arw, n.gyr_arw));
+  setDiagonalBlockValue(Qc_, VRW_ID, cwiseProduct(n.acc_vrw, n.acc_vrw));
+  const double corr = std::max(n.corr_time, 1.0);
+  setDiagonalBlockValue(Qc_, BGSTD_ID, scale(cwiseProduct(n.gyrbias_std, n.gyrbias_std), 2.0 / corr));
+  setDiagonalBlockValue(Qc_, BASTD_ID, scale(cwiseProduct(n.accbias_std, n.accbias_std), 2.0 / corr));
+  setDiagonalBlockValue(Qc_, SGSTD_ID, scale(cwiseProduct(n.gyrscale_std, n.gyrscale_std), 2.0 / corr));
+  setDiagonalBlockValue(Qc_, SASTD_ID, scale(cwiseProduct(n.accscale_std, n.accscale_std), 2.0 / corr));
+}
+
+void GIEngine::buildErrorStateMatrices(const ImuData& imu, Matrix& F, Matrix& G, Matrix& Phi, Matrix& Qd) const {
+  const double dt = imu.dt > 0.0 ? imu.dt : 0.01;
+  const auto rmn = Earth::meridianPrimeVerticalRadius(pvapre_.pos_blh_rad_m[0]);
+  const double rmh = rmn.first + pvapre_.pos_blh_rad_m[2];
+  const double rnh = rmn.second + pvapre_.pos_blh_rad_m[2];
+  const Vec3 accel = scale(imu.dvel, 1.0 / dt);
+  const Vec3 omega = scale(imu.dtheta, 1.0 / dt);
+  (void)rmh;
+  (void)rnh;
+
+  setBlockIdentity(F, P_ID, V_ID);
+
+  setBlock(F, V_ID, PHI_ID, Rotation::skewSymmetric(multiply(pvapre_.cbn, accel)));
+  setBlock(F, V_ID, BA_ID, pvapre_.cbn);
+  setBlock(F, V_ID, SA_ID, multiply(pvapre_.cbn, diag3(accel)));
+  setBlock(F, PHI_ID, PHI_ID, scale(Rotation::skewSymmetric(add(Earth::iewn(pvapre_.pos_blh_rad_m),
+                                                              Earth::enwn(pvapre_.pos_blh_rad_m,
+                                                                          pvapre_.vel_ned_mps))),
+                                     -1.0));
+  setBlock(F, PHI_ID, BG_ID, scale(pvapre_.cbn, -1.0));
+  setBlock(F, PHI_ID, SG_ID, scale(multiply(pvapre_.cbn, diag3(omega)), -1.0));
+  const double corr = std::max(options_.imunoise.corr_time, 1.0);
+  setBlock(F, BG_ID, BG_ID, scale(identityMatrix3(), -1.0 / corr));
+  setBlock(F, BA_ID, BA_ID, scale(identityMatrix3(), -1.0 / corr));
+  setBlock(F, SG_ID, SG_ID, scale(identityMatrix3(), -1.0 / corr));
+  setBlock(F, SA_ID, SA_ID, scale(identityMatrix3(), -1.0 / corr));
+
+  setBlock(G, V_ID, VRW_ID, pvapre_.cbn);
+  setBlock(G, PHI_ID, ARW_ID, pvapre_.cbn);
+  setBlockIdentity(G, BG_ID, BGSTD_ID);
+  setBlockIdentity(G, BA_ID, BASTD_ID);
+  setBlockIdentity(G, SG_ID, SGSTD_ID);
+  setBlockIdentity(G, SA_ID, SASTD_ID);
+
+  Phi = add(identityMatrix(RANK), scale(F, dt));
+  const Matrix GQG = multiply(multiply(G, Qc_), transpose(G));
+  Qd = scale(add(multiply(multiply(Phi, GQG), transpose(Phi)), GQG), 0.5 * dt);
+}
+
+void GIEngine::applyPositionUpdate(GnssData& gnss) {
+  const Matrix3 dr = Earth::DR(pvacur_.pos_blh_rad_m);
+  const Matrix3 dri = Earth::DRi(pvacur_.pos_blh_rad_m);
+  const Vec3 lever_n = multiply(pvacur_.cbn, options_.antlever_m);
+  const Vec3 antenna_pos = add(pvacur_.pos_blh_rad_m, multiply(dri, lever_n));
+  const Vec3 dz_vec = multiply(dr, subtract(antenna_pos, gnss.blh_rad_m));
+  Matrix H(3, RANK, 0.0);
+  setBlockIdentity(H, 0, P_ID);
+
+  setBlock(H, 0, PHI_ID, Rotation::skewSymmetric(lever_n));
+  Matrix R = diagonalMatrix(cwiseProduct(positiveStd(gnss.std_ned_m, 1.0e-3), positiveStd(gnss.std_ned_m, 1.0e-3)));
+  const std::vector<double> dz{dz_vec[0], dz_vec[1], dz_vec[2]};
+  if (options_.enable_basic_dual_yaw_baseline) {
+
+    EKFUpdate(dz, H, R);
+    ++position_update_count_;
+    return;
+  }
+  source_aware::SourceMetadata metadata;
+  metadata.source = source_aware::MeasurementSource::kReceiverPosition;
+  metadata.time = gnss.time;
+  metadata.valid = gnss.isvalid;
+  metadata.std_xyz = gnss.std_ned_m;
+  metadata.quality_flag = gnss.isvalid ? "nominal" : "invalid";
+  Matrix scaled_R = R;
+  const auto weight = applySourceAwareWeighting(metadata.source, metadata, dz, H, R, scaled_R);
+  if (weight.rejected) {
+    return;
+  }
+  EKFUpdate(dz, H, scaled_R);
+  ++position_update_count_;
+}
+
+void GIEngine::applyVelocityUpdate(GnssData& gnss) {
+  const double dt = imucur_.dt > 0.0 ? imucur_.dt : 0.01;
+  const Vec3 omega_b = scale(imucur_.dtheta, 1.0 / dt);
+  const Vec3 antenna_vel = add(pvacur_.vel_ned_mps, multiply(pvacur_.cbn, cross(omega_b, options_.antlever_m)));
+  const Vec3 dz_vec = subtract(antenna_vel, gnss.vel_ned_mps);
+  Matrix H(3, RANK, 0.0);
+  setBlockIdentity(H, 0, V_ID);
+  setBlock(H, 0, PHI_ID, Rotation::skewSymmetric(multiply(pvacur_.cbn, cross(omega_b, options_.antlever_m))));
+  Vec3 stdv = add(positiveStd(gnss.vel_std_mps, 1.0e-3), makeVec3(0.05, 0.05, 0.05));
+  Matrix R = diagonalMatrix(cwiseProduct(stdv, stdv));
+  const std::vector<double> dz{dz_vec[0], dz_vec[1], dz_vec[2]};
+  source_aware::SourceMetadata metadata;
+  metadata.source = source_aware::MeasurementSource::kReceiverVelocity;
+  metadata.time = gnss.time;
+  metadata.valid = gnss.has_velocity;
+  metadata.std_xyz = gnss.vel_std_mps;
+  metadata.quality_flag = gnss.has_velocity ? "nominal" : "invalid";
+  Matrix scaled_R = R;
+  const auto weight = applySourceAwareWeighting(metadata.source, metadata, dz, H, R, scaled_R);
+  if (weight.rejected) {
+    return;
+  }
+  EKFUpdate(dz, H, scaled_R);
+  ++velocity_update_count_;
+}
+
+void GIEngine::applyYawUpdate(GnssData& gnss) {
+  ++yaw_update_count_;
+  const double yaw_obs = gnss.yaw_rad;
+  const double yaw_pred = pvacur_.euler_rad[2];
+  const double yaw_std = std::max(gnss.yaw_std_rad, options_.yaw_std_min_deg * D2R);
+  const double residual = wrapYawResidual(yaw_pred - yaw_obs);
+  const double abs_res = std::fabs(residual);
+  if (yaw_std >= options_.yaw_std_hard_deg * D2R || abs_res >= options_.yaw_res_hard_deg * D2R) {
+    ++yaw_reject_count_;
+    return;
+  }
+  double scale_value = 1.0;
+  bool scheme_downweighted = false;
+  if (yaw_std >= options_.yaw_std_soft_deg * D2R || abs_res >= options_.yaw_res_soft_deg * D2R) {
+    scale_value = options_.yaw_downweight_scale;
+    scheme_downweighted = true;
+  }
+  Matrix H(1, RANK, 0.0);
+  H(0, PHI_ID + 2) = -1.0;
+  Matrix R(1, 1, scale_value * yaw_std * yaw_std);
+  const std::vector<double> dz{residual};
+  source_aware::SourceMetadata metadata;
+  metadata.source = source_aware::MeasurementSource::kDualAntennaYaw;
+  metadata.time = gnss.time;
+  metadata.valid = gnss.has_yaw;
+  metadata.yaw_std_rad = yaw_std;
+  metadata.std_xyz = makeVec3(yaw_std, yaw_std, yaw_std);
+  metadata.quality_flag = gnss.has_yaw ? "nominal" : "invalid";
+  Matrix scaled_R = R;
+  const auto weight = applySourceAwareWeighting(metadata.source, metadata, dz, H, R, scaled_R);
+  if (weight.rejected) {
+    ++yaw_reject_count_;
+    return;
+  }
+  if (scheme_downweighted ||
+      (options_.source_aware_policy_config.enable_source_aware_weighting &&
+       weight.combined_R_scale > 1.0)) {
+    ++yaw_downweight_count_;
+  } else {
+    ++yaw_normal_count_;
+  }
+  EKFUpdate(dz, H, scaled_R);
+}
+
+void GIEngine::applyBasicDualYawUpdate(GnssData& gnss) {
+  ++yaw_update_count_;
+  const double yaw_obs = gnss.yaw_rad;
+  const double yaw_pred = pvacur_.euler_rad[2];
+
+  const double residual = wrapYawResidual(yaw_pred - yaw_obs);
+  const double yaw_std = std::max(options_.basic_dual_yaw_fixed_std_deg * D2R, 1.0e-6);
+  Matrix H(1, RANK, 0.0);
+
+  H(0, PHI_ID + 2) = -1.0;
+
+  Matrix R(1, 1, yaw_std * yaw_std);
+  const std::vector<double> dz{residual};
+  EKFUpdate(dz, H, R);
+  ++yaw_normal_count_;
+}
+
+void GIEngine::applyRawDopplerUpdateForTime(double update_time) {
+  if (!options_.raw_doppler_config.enable_raw_doppler || !raw_doppler_status_.solver_enabled) {
+    return;
+  }
+  const RawDopplerVelocityMeasurement* best = nullptr;
+  double best_dt = options_.raw_doppler_config.raw_doppler_time_tolerance_sec;
+  for (const auto& measurement : raw_doppler_measurements_) {
+    const double dt = std::fabs(measurement.time - update_time);
+    if (dt <= best_dt) {
+      best = &measurement;
+      best_dt = dt;
+    }
+  }
+  if (!best) {
+    return;
+  }
+  if (!RawDopplerFactor::isProviderBacked(*best) || best->sat_count < options_.raw_doppler_config.raw_doppler_min_sat) {
+    ++raw_doppler_status_.reject_count;
+    return;
+  }
+  const double imu_dt = imucur_.dt > 0.0 ? imucur_.dt : 0.01;
+  const Vec3 omega_b = scale(imucur_.dtheta, 1.0 / imu_dt);
+  const Vec3 lever_vel_n = multiply(pvacur_.cbn, cross(omega_b, options_.antlever_m));
+  const Vec3 antenna_vel_n = add(pvacur_.vel_ned_mps, lever_vel_n);
+  const Vec3 residual_vec = subtract(antenna_vel_n, best->velocity_ned_mps);
+  const double residual = norm(residual_vec);
+  if (!options_.source_aware_policy_config.enable_source_aware_weighting &&
+      residual > options_.raw_doppler_config.raw_doppler_residual_gate_mps) {
+    ++raw_doppler_status_.reject_count;
+    raw_doppler_residual_norms_.push_back(residual);
+    return;
+  }
+  Matrix H(3, RANK, 0.0);
+  setBlockIdentity(H, 0, V_ID);
+  setBlock(H, 0, PHI_ID, Rotation::skewSymmetric(lever_vel_n));
+  const Vec3 stdv = RawDopplerFactor::positiveStd(*best);
+  Matrix R = diagonalMatrix(scale(cwiseProduct(stdv, stdv), options_.raw_doppler_config.raw_doppler_R_scale));
+
+  const std::vector<double> dz{residual_vec[0], residual_vec[1], residual_vec[2]};
+  source_aware::SourceMetadata metadata;
+  metadata.source = source_aware::MeasurementSource::kRawDopplerVelocity;
+  metadata.time = best->time;
+  metadata.valid = RawDopplerFactor::isProviderBacked(*best);
+  metadata.std_xyz = stdv;
+  metadata.residual_norm = residual;
+  metadata.time_diff_sec = best->time - update_time;
+  metadata.sat_count = best->sat_count;
+  metadata.provider_status = best->provider_status;
+  metadata.quality_flag = best->provider_status == "available" ? "nominal" : best->provider_status;
+  metadata.covariance_available = true;
+  metadata.spike_candidate = residual > options_.raw_doppler_config.raw_doppler_residual_gate_mps;
+  Matrix scaled_R = R;
+  const auto weight = applySourceAwareWeighting(metadata.source, metadata, dz, H, R, scaled_R);
+  if (weight.rejected) {
+    ++raw_doppler_status_.reject_count;
+    raw_doppler_residual_norms_.push_back(residual);
+    return;
+  }
+  EKFUpdate(dz, H, scaled_R);
+  raw_doppler_residual_norms_.push_back(residual);
+  ++raw_doppler_status_.update_count;
+  if (raw_doppler_status_.sat_count_min == 0 || best->sat_count < raw_doppler_status_.sat_count_min) {
+    raw_doppler_status_.sat_count_min = best->sat_count;
+  }
+  raw_doppler_status_.sat_count_max = std::max(raw_doppler_status_.sat_count_max, best->sat_count);
+  std::vector<std::size_t> sat_counts;
+  for (const auto& measurement : raw_doppler_measurements_) {
+    if (measurement.provider_status == "available" && measurement.sat_count >= options_.raw_doppler_config.raw_doppler_min_sat) {
+      sat_counts.push_back(measurement.sat_count);
+    }
+  }
+  if (!sat_counts.empty()) {
+    std::sort(sat_counts.begin(), sat_counts.end());
+    raw_doppler_status_.sat_count_median = sat_counts[sat_counts.size() / 2];
+  }
+  if (!raw_doppler_residual_norms_.empty()) {
+    std::vector<double> sorted = raw_doppler_residual_norms_;
+    std::sort(sorted.begin(), sorted.end());
+    const std::size_t index = static_cast<std::size_t>(0.95 * static_cast<double>(sorted.size() - 1));
+    raw_doppler_status_.residual_p95_mps = sorted[index];
+  }
+}
+
+void GIEngine::applyGo2AttitudeWeakPriorForTime(double update_time) {
+  if (!options_.go2_attitude_prior_config.enable_go2_attitude_weak_prior ||
+      !go2_attitude_prior_status_.solver_enabled) {
+    return;
+  }
+  const Go2AttitudeWeakPriorMeasurement* best = nullptr;
+  double best_dt = options_.go2_attitude_prior_config.go2_attitude_prior_time_tolerance_sec;
+  for (const auto& measurement : go2_attitude_priors_) {
+    const double dt = std::fabs(measurement.time - update_time);
+    if (dt <= best_dt) {
+      best = &measurement;
+      best_dt = dt;
+    }
+  }
+  if (!best) {
+    return;
+  }
+  if (!Go2WeakPriorFactor::isActive(*best)) {
+    ++go2_attitude_prior_status_.reject_count;
+    return;
+  }
+  const std::vector<double> dz = Go2WeakPriorFactor::residual(pvacur_, *best);
+  Matrix H = Go2WeakPriorFactor::designMatrix(pvacur_);
+  Matrix R = Go2WeakPriorFactor::covariance(*best, options_.go2_attitude_prior_config);
+  source_aware::SourceMetadata metadata;
+  metadata.source = source_aware::MeasurementSource::kGo2AttitudeRollPitch;
+  metadata.time = best->time;
+  metadata.valid = best->source_status == "active";
+  metadata.std_xyz = makeVec3(best->std_roll_rad, best->std_pitch_rad, best->std_pitch_rad);
+  metadata.yaw_std_rad = std::max(best->std_roll_rad, best->std_pitch_rad);
+  metadata.time_diff_sec = best->time - update_time;
+  metadata.provider_status = best->source_status == "active" ? "available" : best->source_status;
+  metadata.quality_flag = best->quality_flag;
+  metadata.covariance_available = true;
+  Matrix scaled_R = R;
+  if (options_.go2_attitude_prior_config.go2_attitude_prior_sourceaware) {
+    const auto weight = applySourceAwareWeighting(metadata.source, metadata, dz, H, R, scaled_R);
+    if (weight.rejected) {
+      ++go2_attitude_prior_status_.reject_count;
+      return;
+    }
+  }
+  EKFUpdate(dz, H, scaled_R);
+  go2_roll_residuals_.push_back(std::fabs(dz[0]));
+  go2_pitch_residuals_.push_back(std::fabs(dz[1]));
+  ++go2_attitude_prior_status_.update_count;
+  auto p95 = [](std::vector<double> values) {
+    if (values.empty()) {
+      return 0.0;
+    }
+    std::sort(values.begin(), values.end());
+    return values[static_cast<std::size_t>(0.95 * static_cast<double>(values.size() - 1))];
+  };
+  go2_attitude_prior_status_.residual_roll_p95_rad = p95(go2_roll_residuals_);
+  go2_attitude_prior_status_.residual_pitch_p95_rad = p95(go2_pitch_residuals_);
+}
+
+void GIEngine::applyGo2VelocityDiagnosticPriorForTime(double update_time) {
+  const bool controlled_horizontal =
+      options_.go2_velocity_prior_diagnostic_config.enable_go2_horizontal_velocity_prior;
+  if (!options_.go2_velocity_prior_diagnostic_config.enable_go2_velocity_prior_diagnostic ||
+      !go2_velocity_diagnostic_prior_status_.solver_enabled ||
+      (!options_.go2_velocity_prior_diagnostic_config.go2_diagnostic_prior_only && !controlled_horizontal)) {
+    return;
+  }
+  const Go2VelocityDiagnosticPriorMeasurement* best = nullptr;
+  double best_dt = options_.go2_velocity_prior_diagnostic_config.go2_velocity_prior_time_tolerance_sec;
+  for (const auto& measurement : go2_velocity_diagnostic_priors_) {
+    if (!measurement.update_flag) {
+      continue;
+    }
+    const double dt = std::fabs(measurement.time - update_time);
+    if (dt <= best_dt) {
+      best = &measurement;
+      best_dt = dt;
+    }
+  }
+  if (!best) {
+    return;
+  }
+  if (best->source_status != "active" ||
+      (!best->diagnostic_only && !controlled_horizontal) ||
+      best->go2_velocity_truth_claim) {
+    ++go2_velocity_diagnostic_prior_status_.reject_count;
+    return;
+  }
+  const Vec3 stdv = positiveStd(
+      scale(best->std_ned_mps, std::max(1.0e-6, options_.go2_velocity_prior_diagnostic_config.go2_velocity_prior_std_scale)),
+      1.0e-3);
+  const Vec3 residual_vec = subtract(pvacur_.vel_ned_mps, best->velocity_ned_mps);
+  const bool horizontal_2d =
+      controlled_horizontal &&
+      options_.go2_velocity_prior_diagnostic_config.go2_horizontal_velocity_prior_mode == "horizontal_2d";
+  Matrix H(horizontal_2d ? 2 : 3, RANK, 0.0);
+  Matrix R(horizontal_2d ? 2 : 3, horizontal_2d ? 2 : 3, 0.0);
+  std::vector<double> dz;
+  if (horizontal_2d) {
+    H(0, V_ID + 0) = 1.0;
+    H(1, V_ID + 1) = 1.0;
+    R(0, 0) = stdv[0] * stdv[0];
+    R(1, 1) = stdv[1] * stdv[1];
+    dz = {residual_vec[0], residual_vec[1]};
+  } else {
+    setBlockIdentity(H, 0, V_ID);
+    R = diagonalMatrix(cwiseProduct(stdv, stdv));
+    dz = {residual_vec[0], residual_vec[1], residual_vec[2]};
+  }
+  Matrix scaled_R = R;
+  if (controlled_horizontal &&
+      options_.go2_velocity_prior_diagnostic_config.go2_horizontal_velocity_prior_source_aware_enabled) {
+    source_aware::SourceMetadata metadata;
+    metadata.source = source_aware::MeasurementSource::kGo2HorizontalVelocity;
+    metadata.time = best->time;
+    metadata.valid = best->source_status == "active";
+    metadata.std_xyz = makeVec3(stdv[0], stdv[1], options_.go2_velocity_prior_diagnostic_config.go2_horizontal_velocity_prior_vertical_disabled ? 999.0 : stdv[2]);
+    metadata.residual_norm = horizontal_2d ? std::sqrt(residual_vec[0] * residual_vec[0] + residual_vec[1] * residual_vec[1])
+                                           : norm(residual_vec);
+    metadata.time_diff_sec = best->time - update_time;
+    metadata.provider_status = best->source_status == "active" ? "available" : best->source_status;
+    metadata.quality_flag = best->quality_flag.empty() ? "nominal" : best->quality_flag;
+    metadata.covariance_available = true;
+    const auto weight = applySourceAwareWeighting(metadata.source, metadata, dz, H, R, scaled_R);
+    if (weight.rejected) {
+      ++go2_velocity_diagnostic_prior_status_.reject_count;
+      return;
+    }
+  }
+  EKFUpdate(dz, H, scaled_R);
+  ++go2_velocity_diagnostic_prior_status_.update_count;
+  if (horizontal_2d || best->std_ned_mps[2] >= 999.0 ||
+      best->prior_policy.find("horizontal") != std::string::npos) {
+    go2_velocity_diagnostic_prior_status_.horizontal_only = true;
+    go2_velocity_diagnostic_prior_status_.vertical_disabled = true;
+    ++go2_velocity_diagnostic_prior_status_.horizontal_update_count;
+  }
+}
+
+source_aware::SourceWeightResult GIEngine::applySourceAwareWeighting(
+    source_aware::MeasurementSource source,
+    const source_aware::SourceMetadata& metadata,
+    const std::vector<double>& dz,
+    const Matrix& H,
+    const Matrix& R,
+    Matrix& scaled_R) {
+  scaled_R = R;
+  source_aware::ObservationInnovation innovation;
+  innovation.residual = dz;
+  innovation.residual_norm = vectorNorm(dz);
+  innovation.base_R_trace = matrixTrace(R);
+  const Matrix hph = multiply(multiply(H, Cov_), transpose(H));
+  const Matrix innovation_covariance = add(hph, R);
+  innovation.hph_trace = matrixTrace(hph);
+  innovation.innovation_cov_trace = matrixTrace(innovation_covariance);
+  innovation.dof = dz.size();
+
+  if (options_.source_aware_policy_config.source_aware_use_innovation_covariance && !dz.empty()) {
+    try {
+      const Matrix s_inv = inverse(innovation_covariance);
+      const std::vector<double> weighted_residual = multiply(s_inv, dz);
+      innovation.nis = std::max(0.0, dotVector(dz, weighted_residual));
+      innovation.normalized_innovation =
+          std::sqrt(std::max(0.0, innovation.nis / static_cast<double>(std::max<std::size_t>(1, innovation.dof))));
+      innovation.used_innovation_covariance = true;
+    } catch (const std::exception&) {
+      innovation.used_innovation_covariance = false;
+    }
+  }
+  if (!innovation.used_innovation_covariance) {
+    innovation.normalized_innovation =
+        innovation.residual_norm / std::sqrt(std::max(1.0e-12, innovation.base_R_trace + innovation.hph_trace));
+  }
+  source_aware::SourceMetadata metadata_copy = metadata;
+  metadata_copy.source = source;
+  metadata_copy.residual_norm = innovation.residual_norm;
+
+  source_aware::SourceWeightResult result = source_aware_policy_.evaluate(metadata_copy, innovation);
+  const bool source_aware_active = source_aware_policy_.enabledFor(source);
+  if (source_aware_active) {
+    scaled_R = scale(R, result.combined_R_scale);
+    result.scaled_R_trace = matrixTrace(scaled_R);
+    if (source_aware_active && options_.source_aware_policy_config.source_aware_trace_enabled) {
+      source_aware_trace_.add(metadata_copy.time, update_count_ + 1, result);
+    }
+  }
+  if (source_aware_active) {
+    ++source_aware_evaluation_count_;
+    if (std::fabs(result.combined_R_scale - 1.0) > 1.0e-12) {
+      ++source_aware_weight_changed_count_;
+    }
+  }
+
+  return result;
+}
+
+double GIEngine::wrapYawResidual(double residual_rad) const {
+  return Rotation::wrapRad(residual_rad);
+}
+
+Matrix GIEngine::covarianceMatrix() const {
+  return Cov_;
+}
+
+void GIEngine::setCovarianceMatrix(const Matrix& matrix) {
+  Cov_ = matrix;
+}
+
+}

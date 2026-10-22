@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+data/
+outputs/
+results/
+*.local.yaml
+.env
+.vscode/
+.idea/
+.DS_Store
+third_party/
+*.so
+*.a
+*.o

@@ -1,0 +1,61 @@
+frames_and_geometry:
+  navigation_frame: NED
+  body_frame: FRD
+  attitude_direction: C_nb_body_to_NED
+  left_invariant_error: X_true_inverse_X_hat
+  gnss1_identity: RIGHT
+  gnss2_identity: LEFT
+  relative_measurement: p_GNSS2_minus_p_GNSS1
+  imu_to_gnss1_frd_m:
+  - 0.03
+  - 0.03
+  - -0.3
+  gnss2_minus_gnss1_frd_m:
+  - 0.0
+  - -0.35
+  - 0.0
+  baseline_length_m: 0.35
+  go2_input_frame: FLU
+  imu_conversion_order:
+  - FLU_to_FRD_x_minusy_minusz
+  - active_RzRyRx_installation
+  imu_installation_rpy_deg:
+  - -1.0
+  - 0.0
+  - 0.0
+  fixed_ned_origin: FIRST_COMMON_GNSS1_HPPOSECEF_EPOCH
+  per_epoch_ned_origin: false
+imu_calibration:
+  source_projection: TIMESTAMP_GYROSCOPE_ACCELEROMETER_ONLY
+  quaternion_materialized: false
+  rpy_materialized: false
+  yaw_materialized: false
+  interval_seconds: 5.0
+  primary_interval: FIRST_FIVE_SECONDS
+  fallback: FIRST_INPUT_ONLY_CONTIGUOUS_STATIC_FIVE_SECONDS
+  static_gyro_norm_median_max_radps: 0.05
+  static_acceleration_norm_minus_local_g_abs_max_mps2: 0.5
+  gyro_bias: WINDOW_MEAN_CONSTANT
+  accelerometer_bias_estimated: false
+  initial_gravity_direction: WINDOW_MEAN_ACCELEROMETER
+  final_error_search: false
+initialization:
+  roll_pitch: CALIBRATED_INITIAL_GRAVITY_C_nb_f_b_plus_g_n_equals_zero
+  yaw: FIRST_VALID_HORIZONTAL_GNSS2_MINUS_GNSS1_WITH_FIXED_BODY_TRANSFORM
+  position: p1_minus_C_nb_times_imu_to_gnss1_lever
+  velocity: ZERO_AT_VERIFIED_STATIC_INITIALIZATION_EPOCH
+  trace_access: false
+  go2_attitude_access: false
+  initial_covariance:
+    attitude_rad2: PI_OVER_3_SQUARED_TIMES_I3
+    velocity_m2ps2: 0.1_SQUARED_TIMES_I3
+    position_m2: 0.1_SQUARED_TIMES_I3
+process_noise_psd_paper_experiment:
+  gyro_rad2_per_s:
+  - 0.0004
+  - 0.0004
+  - 0.000324
+  accelerometer_m2ps3:
+  - 0.0289
+  - 0.0225
+  - 0.0576

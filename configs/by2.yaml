@@ -1,0 +1,122 @@
+imupath: "${DATA_ROOT}/BY2/IMU.imu"
+gnsspath: "${DATA_ROOT}/BY2/GNSS.gnss"
+starttime: 66.0
+endtime: 340.0
+initpos: [39.98482973, 116.34312609, 41.80208107]
+initvel: [0, 0, 0]
+initatt: [0, 0, 0.688505]
+initgyrbias: [0, 0, 0]
+initaccbias: [0, 0, 0]
+initgyrscale: [0, 0, 0]
+initaccscale: [0, 0, 0]
+initposstd: [10, 10, 10]
+initvelstd: [1, 1, 1]
+initattstd: [2, 2, 2]
+arw: [0.985, 0.985, 0.985]
+vrw: [9.478382094779873, 9.784198200134004, 7.6321402201126745]
+gbstd: [9.38, 9.38, 9.38]
+abstd: [4817.482008954474, 8259.572423450163, 2257.241538343225]
+gsstd: [0, 0, 0]
+asstd: [0, 0, 0]
+corrtime: 1.0
+antlever: [0.03, 0.03, -0.3]
+initbgstd: [9.38, 9.38, 9.38]
+initbastd: [77.8, 77.8, 77.8]
+initsgstd: [0, 0, 0]
+initsastd: [0, 0, 0]
+enable_dual_yaw: true
+enable_receiver_velocity: true
+enable_raw_doppler: true
+enable_source_aware: true
+enable_go2_roll_pitch_prior: true
+enable_go2_horizontal_velocity_prior: true
+basic_dual_yaw_fixed_std_deg: 2.933193
+raw_doppler_factor_path: "${DATA_ROOT}/BY2/DOPPLER.csv"
+go2_attitude_prior_path: "${DATA_ROOT}/BY2/INCLINATION.csv"
+go2_horizontal_velocity_prior_path: "${DATA_ROOT}/BY2/HORIZONTAL_VELOCITY.csv"
+go2_horizontal_velocity_prior_vertical_disabled: true
+go2_horizontal_velocity_prior_mode: horizontal_2d
+yaw_std_min_deg: 0.5
+yaw_std_soft_deg: 3
+yaw_std_hard_deg: 6
+yaw_res_soft_deg: 6
+yaw_res_hard_deg: 15
+yaw_downweight_scale: 2.5
+status_fallback_used: false
+legacy_provider_used: false
+raw_doppler_factor_source: rtklib_b34_pntpos_estvel_fresh_gnss1_rawx_sfrbx
+raw_doppler_backend_id: rtklib_b34_pntpos_estvel_fresh_gnss1_rawx_sfrbx
+raw_doppler_backend_source_files: ["gnss1-raw.csv", "gnss1-status.csv"]
+raw_doppler_backend_source_hashes: {"gnss1-raw.csv": "5d2ac46d28c14470cd8b2c910d8cba12492bed0e72517e98496188851f5bc027", "gnss1-status.csv": "9761d2d7055356857bd7b26a251fdd60fdf6c2b18a882dac74bc35d164e42e08"}
+helper_executable_hash: 0519278986b4bab4b390e9473bde461d9660f8bd5ca5cb754e1d46b9c9ee6f69
+obs_source_hash: 87de2b05469d6da9b053d72644875eb40824d71f97e880e572635784ee2f1111
+nav_source_hash: 549ef7ff0fa07b7eaac18f55390fba2ce68ddcb64999cc63b44d16e9b3cca033
+conversion_config_hash: ede48e718b4a3cff21941efd78bc422753a926b63352346bf092ac997e3c4fc2
+covariance_policy: conservative_isotropic_max_ecef_std_floor_0p2_mps
+raw_doppler_min_sat: 5
+raw_doppler_mode: doppler_ls_velocity
+raw_doppler_time_tolerance_sec: 0.05
+raw_doppler_residual_gate_mps: 3.0
+raw_doppler_R_scale: 1.0
+rtklib_position_solution_used_as_solver_input: false
+nav_pvt_velocity_used_as_raw_doppler: false
+gnss_velocity_used_as_raw_doppler: false
+source_aware_policy_version: clean_v1_conservative_innovation_covariance
+source_aware_mode: lsim_oim
+go2_attitude_prior_std_roll_deg: 1.6
+go2_attitude_prior_std_pitch_deg: 1.6
+go2_attitude_prior_time_tolerance_sec: 0.02
+go2_attitude_prior_sourceaware: true
+go2_velocity_prior_time_tolerance_sec: 0.08
+go2_horizontal_velocity_prior_std_scale: 1.0
+go2_horizontal_velocity_prior_source_aware_enabled: true
+go2_horizontal_velocity_adaptive_std_enabled: false
+go2_position_prior_enabled: false
+go2_velocity_prior_enabled: false
+go2_yaw_prior_enabled: false
+source_aware_max_R_scale: 25.0
+source_aware_global_cap: 25.0
+source_aware_use_innovation_covariance: true
+source_aware_deadband_normalized: 1.5
+source_aware_moderate_normalized: 2.5
+source_aware_strong_normalized: 4.0
+source_aware_receiver_position_cap: 5.0
+source_aware_receiver_velocity_cap: 8.0
+source_aware_dual_yaw_cap: 10.0
+source_aware_raw_doppler_cap: 15.0
+source_aware_go2_attitude_cap: 10.0
+source_aware_go2_horizontal_velocity_cap: 10.0
+source_aware_reject_extreme: false
+source_aware_no_R_shrink: true
+source_aware_trace_enabled: true
+source_aware_enable_rolling_innovation_baseline: true
+source_aware_rolling_window_size: 31
+source_aware_rolling_mad_floor: 0.5
+source_aware_method_family: clean_v1_conservative_quadratic
+source_aware_method_k0: 1.5
+source_aware_method_k1: 4.0
+source_aware_method_c: 2.5
+source_aware_method_alpha: 0.0
+source_aware_method_phi: 1.0
+source_aware_method_base_gain: 1.0
+source_aware_receiver_position_enabled: true
+source_aware_receiver_position_lsim_enabled: true
+source_aware_receiver_position_oim_enabled: true
+source_aware_receiver_velocity_enabled: true
+source_aware_receiver_velocity_lsim_enabled: true
+source_aware_receiver_velocity_oim_enabled: true
+source_aware_dual_antenna_yaw_enabled: true
+source_aware_dual_antenna_yaw_lsim_enabled: true
+source_aware_dual_antenna_yaw_oim_enabled: true
+source_aware_raw_doppler_velocity_enabled: true
+source_aware_raw_doppler_velocity_lsim_enabled: true
+source_aware_raw_doppler_velocity_oim_enabled: true
+source_aware_go2_attitude_roll_pitch_enabled: true
+source_aware_go2_attitude_roll_pitch_lsim_enabled: true
+source_aware_go2_attitude_roll_pitch_oim_enabled: true
+source_aware_go2_horizontal_velocity_enabled: true
+source_aware_go2_horizontal_velocity_lsim_enabled: true
+source_aware_go2_horizontal_velocity_oim_enabled: true
+enable_basic_dual_yaw_baseline: false
+go2_attitude_prior_diagnostic_only: false
+go2_diagnostic_prior_only: false

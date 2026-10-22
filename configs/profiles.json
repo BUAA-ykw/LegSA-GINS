@@ -1,0 +1,36 @@
+{
+  "full": {},
+  "no_online_heading": {
+    "enable_dual_yaw": false,
+    "enable_raw_doppler": false,
+    "enable_source_aware": false,
+    "enable_go2_roll_pitch_prior": false,
+    "enable_go2_horizontal_velocity_prior": false
+  },
+  "position_heading": {
+    "enable_basic_dual_yaw_baseline": true,
+    "enable_receiver_velocity": false,
+    "enable_raw_doppler": false,
+    "enable_source_aware": false,
+    "enable_go2_roll_pitch_prior": false,
+    "enable_go2_horizontal_velocity_prior": false
+  },
+  "position_velocity_heading": {
+    "enable_raw_doppler": false,
+    "enable_source_aware": false,
+    "enable_go2_roll_pitch_prior": false,
+    "enable_go2_horizontal_velocity_prior": false
+  },
+  "without_doppler": {
+    "enable_raw_doppler": false
+  },
+  "without_weighting": {
+    "enable_source_aware": false
+  },
+  "without_inclination": {
+    "enable_go2_roll_pitch_prior": false
+  },
+  "without_horizontal_velocity": {
+    "enable_go2_horizontal_velocity_prior": false
+  }
+}

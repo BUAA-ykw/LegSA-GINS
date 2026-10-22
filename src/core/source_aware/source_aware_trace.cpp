@@ -1,0 +1,119 @@
+// LegSA-GINS. Inertial backbone derived from KF-GINS; see THIRD_PARTY_NOTICES.md.
+#include "legsa_gins/source_aware/source_aware_trace.hpp"
+
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+
+namespace legsa_gins::source_aware {
+namespace {
+
+std::string joinReasons(const std::vector<std::string>& reasons) {
+  std::ostringstream stream;
+  for (std::size_t i = 0; i < reasons.size(); ++i) {
+    if (i > 0) {
+      stream << "|";
+    }
+    stream << reasons[i];
+  }
+  return stream.str();
+}
+
+std::string escapeCsv(std::string value) {
+  const bool quote = value.find_first_of(",\"\n") != std::string::npos;
+  if (!quote) {
+    return value;
+  }
+  std::string out = "\"";
+  for (char ch : value) {
+    if (ch == '"') {
+      out.push_back('"');
+    }
+    out.push_back(ch);
+  }
+  out.push_back('"');
+  return out;
+}
+
+double percentile(std::vector<double> values, double q) {
+  if (values.empty()) {
+    return 0.0;
+  }
+  std::sort(values.begin(), values.end());
+  const double raw_index = q * static_cast<double>(values.size() - 1);
+  const auto index = static_cast<std::size_t>(raw_index);
+  return values[std::min(index, values.size() - 1)];
+}
+
+}
+
+void SourceAwareTrace::add(double time, std::size_t update_index, const SourceWeightResult& result) {
+  rows_.push_back(SourceAwareTraceRow{time, update_index, result});
+}
+
+bool SourceAwareTrace::empty() const {
+  return rows_.empty();
+}
+
+const std::vector<SourceAwareTraceRow>& SourceAwareTrace::rows() const {
+  return rows_;
+}
+
+SourceAwareRuntimeStats SourceAwareTrace::stats() const {
+  SourceAwareRuntimeStats out;
+  out.trace_row_count = rows_.size();
+  std::array<std::vector<double>, kMeasurementSourceCount> scales;
+  for (const auto& row : rows_) {
+    const std::size_t index = sourceIndex(row.result.source);
+    ++out.update_count_by_source[index];
+    if (row.result.rejected) {
+      ++out.reject_count_by_source[index];
+    }
+    scales[index].push_back(row.result.combined_R_scale);
+  }
+  for (std::size_t i = 0; i < kMeasurementSourceCount; ++i) {
+    out.scale_p50_by_source[i] = percentile(scales[i], 0.50);
+    out.scale_p95_by_source[i] = percentile(scales[i], 0.95);
+    out.scale_max_by_source[i] = scales[i].empty() ? 0.0 : *std::max_element(scales[i].begin(), scales[i].end());
+  }
+  return out;
+}
+
+void SourceAwareTrace::writeCsv(const std::string& output_dir) const {
+  if (rows_.empty()) {
+    return;
+  }
+  std::filesystem::create_directories(output_dir);
+  std::ofstream out(std::filesystem::path(output_dir) / "SOURCE_AWARE_WEIGHT_TRACE.csv");
+  out << "time,update_index,source_id,policy_version,mode,lsim_score,oim_score,lsim_R_scale,oim_R_scale,"
+      << "combined_R_scale,residual_norm,normalized_innovation,nis,dof,innovation_cov_trace,"
+      << "used_innovation_covariance,source_cap,rolling_normalized_median,rolling_normalized_mad,"
+      << "relative_anomaly_score,base_R_trace,scaled_R_trace,accepted,rejected,"
+      << "go2_readiness_metadata_available,go2_motion_state,go2_contact_label,"
+      << "go2_readiness_score,go2_readiness_flag,reason_codes,metadata_summary\n";
+  out << std::fixed << std::setprecision(10);
+  for (const auto& row : rows_) {
+    const auto& result = row.result;
+    out << row.time << "," << row.update_index << "," << toString(result.source) << ","
+        << result.policy_version << "," << result.mode << "," << result.lsim_score << "," << result.oim_score << ","
+        << result.lsim_R_scale << "," << result.oim_R_scale << "," << result.combined_R_scale << ","
+        << result.residual_norm << "," << result.normalized_innovation << ","
+        << result.nis << "," << result.dof << "," << result.innovation_cov_trace << ","
+        << (result.used_innovation_covariance ? 1 : 0) << "," << result.source_cap << ","
+        << result.rolling_normalized_median << "," << result.rolling_normalized_mad << ","
+        << result.relative_anomaly_score << ","
+        << result.base_R_trace << "," << result.scaled_R_trace << ","
+        << (result.accepted ? 1 : 0) << "," << (result.rejected ? 1 : 0) << ","
+        << (result.go2_readiness_metadata_available ? 1 : 0) << ","
+        << escapeCsv(result.go2_motion_state) << ","
+        << escapeCsv(result.go2_contact_label) << ","
+        << result.go2_readiness_score << ","
+        << (result.go2_readiness_flag ? 1 : 0) << ","
+        << escapeCsv(joinReasons(result.reason_codes)) << ","
+        << escapeCsv(result.metadata_summary) << "\n";
+  }
+}
+
+}

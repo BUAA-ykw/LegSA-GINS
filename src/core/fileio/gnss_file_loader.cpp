@@ -1,0 +1,96 @@
+// LegSA-GINS. Inertial backbone derived from KF-GINS; see THIRD_PARTY_NOTICES.md.
+#include "legsa_gins/fileio/gnss_file_loader.hpp"
+
+#include "legsa_gins/common/earth.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <fstream>
+#include <map>
+#include <sstream>
+#include <stdexcept>
+
+namespace legsa_gins {
+
+GnssFileLoader::GnssFileLoader(const std::string& path) : rows_(loadFifteenColumn(path)) {}
+
+std::vector<GnssData> GnssFileLoader::loadFifteenColumn(const std::string& path) {
+  std::ifstream input(path);
+  if (!input) {
+    throw std::runtime_error("failed to open GNSS file: " + path);
+  }
+  std::vector<GnssData> rows;
+  std::string line;
+  std::size_t line_number = 0;
+  while (std::getline(input, line)) {
+    ++line_number;
+    if (line.empty() || line[0] == '#') {
+      continue;
+    }
+    std::istringstream stream(line);
+    GnssData gnss;
+    stream >> gnss.time >> gnss.blh_rad_m[0] >> gnss.blh_rad_m[1] >> gnss.blh_rad_m[2] >>
+        gnss.std_ned_m[0] >> gnss.std_ned_m[1] >> gnss.std_ned_m[2] >>
+        gnss.vel_ned_mps[0] >> gnss.vel_ned_mps[1] >> gnss.vel_ned_mps[2] >>
+        gnss.vel_std_mps[0] >> gnss.vel_std_mps[1] >> gnss.vel_std_mps[2] >>
+        gnss.yaw_deg >> gnss.yaw_std_deg;
+    if (stream) {
+      if (std::fabs(gnss.blh_rad_m[0]) > kPi / 2.0 || std::fabs(gnss.blh_rad_m[1]) > kPi) {
+        gnss.blh_rad_m[0] = Earth::degToRad(gnss.blh_rad_m[0]);
+        gnss.blh_rad_m[1] = Earth::degToRad(gnss.blh_rad_m[1]);
+      }
+      gnss.yaw_rad = Earth::degToRad(gnss.yaw_deg);
+      gnss.yaw_std_rad = Earth::degToRad(std::max(gnss.yaw_std_deg, 0.001));
+      int position_valid = 1;
+      int velocity_valid = 1;
+      int yaw_valid = 1;
+      if (stream >> position_valid) {
+        if (!(stream >> velocity_valid >> yaw_valid) ||
+            (position_valid != 0 && position_valid != 1) ||
+            (velocity_valid != 0 && velocity_valid != 1) ||
+            (yaw_valid != 0 && yaw_valid != 1)) {
+          throw std::runtime_error(
+              "GNSS formal validity extension must be three 0/1 columns at line " +
+              std::to_string(line_number));
+        }
+        std::string trailing;
+        if (stream >> trailing) {
+          throw std::runtime_error("unexpected GNSS column after formal validity fields at line " +
+                                   std::to_string(line_number));
+        }
+        gnss.validity_explicit = true;
+      }
+      gnss.has_position = position_valid != 0;
+      gnss.has_velocity = velocity_valid != 0;
+      gnss.has_yaw = yaw_valid != 0;
+      gnss.isvalid = false;
+      rows.push_back(gnss);
+    }
+  }
+  return rows;
+}
+
+bool GnssFileLoader::next(GnssData& gnss) {
+  if (index_ >= rows_.size()) {
+    return false;
+  }
+  gnss = rows_[index_++];
+  return true;
+}
+
+bool GnssFileLoader::isEof() const {
+  return index_ >= rows_.size();
+}
+
+bool GnssFileLoader::isOpen() const {
+  return !rows_.empty();
+}
+
+bool GnssFileLoader::allValidityExplicit() const {
+  return !rows_.empty() &&
+         std::all_of(rows_.begin(), rows_.end(), [](const GnssData& row) {
+           return row.validity_explicit;
+         });
+}
+
+}
